@@ -11,6 +11,7 @@ A Leaflet plug-in to define and draw patterns on existing Polylines or along coo
 
 ## Usage
 
+```javascript
     var polyline = L.polyline([...]).addTo(map);
     var decorator = L.polylineDecorator(polyline, {
         patterns: [
@@ -18,6 +19,7 @@ A Leaflet plug-in to define and draw patterns on existing Polylines or along coo
             {offset: 0, repeat: '20px', symbol: new L.Symbol.Dash({pixelSize: 10})}
         ]
     }).addTo(map);
+```
 
 The `polyline` parameter can be a single array of `L.LatLng` or, with Leaflet's simplified syntax, an array of 2-cells arrays of coordinates. 
 It is useful if you don't want to actually display a polyline, but just a pattern following coordinates, like a dotted line.
