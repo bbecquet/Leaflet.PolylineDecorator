@@ -60,20 +60,22 @@ L.GeometryUtil = {
         // 2. find the starting point by using the offsetRatio
         var previous = L.GeometryUtil.interpolateOnPointPath(pts, offsetRatio);
         positions.push(previous);
-        // 3. consider only the rest of the path, starting at the previous point
-        var remainingPath = pts;
-        remainingPath = remainingPath.slice(previous.predecessor);
-        remainingPath[0] = previous.pt;
-        var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
-        // 4. project as a ratio of the remaining length,
-        // and repeat while there is room for another point of the pattern
-        while(repeatIntervalLength <= remainingLength) {
-            previous = L.GeometryUtil.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
-            positions.push(previous);
+        if(repeatRatio > 0) {
+            // 3. consider only the rest of the path, starting at the previous point
+            var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
             remainingPath[0] = previous.pt;
-            remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
-         }
+            var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
+            // 4. project as a ratio of the remaining length,
+            // and repeat while there is room for another point of the pattern
+            while(repeatIntervalLength <= remainingLength) {
+                previous = L.GeometryUtil.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
+                positions.push(previous);
+                remainingPath = remainingPath.slice(previous.predecessor);
+                remainingPath[0] = previous.pt;
+                remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
+            }
+        }
         return positions;
     },
 
