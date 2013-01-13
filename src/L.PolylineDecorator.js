@@ -31,7 +31,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     _parsePatternDef: function(patternDef, latLngs) {
         var pattern = {
             cache: [],
-            symbolFactory: patternDef.symbolFactory,
+            symbolFactory: patternDef.symbol,
             isOffsetInPixels: false,
             isRepeatInPixels: false
         };
@@ -79,7 +79,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     _buildSymbols: function(symbolFactory, directionPoints) {
         var symbols = [];
         for(var i=0, l=directionPoints.length; i<l; i++) {
-            symbols.push(symbolFactory.buildSymbol(directionPoints[i], this._map, i, l));
+            symbols.push(symbolFactory.buildSymbol(directionPoints[i], this._latLngs, this._map, i, l));
         }
         return symbols;
     },
@@ -95,23 +95,23 @@ L.PolylineDecorator = L.LayerGroup.extend({
             return dirPoints;
         
         // polyline can be defined as a L.Polyline object or just an array of coordinates
-        var latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
-        if(latLngs.length < 2) { return []; }
+        this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
+        if(this._latLngs.length < 2) { return []; }
 
         var offset, repeat, pathPixelLength = null;
         if(pattern.isOffsetInPixels) {
-            pathPixelLength =  L.GeometryUtil.getPixelLength(latLngs, this._map);
+            pathPixelLength =  L.GeometryUtil.getPixelLength(this._latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
         } else {
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength != null) ? pathPixelLength : L.GeometryUtil.getPixelLength(latLngs, this._map);
+            pathPixelLength = (pathPixelLength != null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.GeometryUtil.projectPatternOnPath(latLngs, offset, repeat, this._map);
+        dirPoints = L.GeometryUtil.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
         pattern.cache[this._map.getZoom()] = dirPoints;
         
         return dirPoints;

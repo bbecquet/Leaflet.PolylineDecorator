@@ -14,16 +14,14 @@ L.Symbol.Dash = L.Class.extend({
     
     options: {
         pixelSize: 10,
-        pathOptions: {
-            weight: 3
-        }
+        pathOptions: { }
     },
     
     initialize: function (options) {
         L.Util.setOptions(this, options);
     },
 
-    buildSymbol: function(dirPoint, map, index, total) {
+    buildSymbol: function(dirPoint, latLngs, map, index, total) {
         var opts = this.options;
         
         // for a dot, nothing more to compute
@@ -47,9 +45,9 @@ L.Symbol.ArrowHead = L.Class.extend({
     isZoomDependant: true,
     
     options: {
-        polygon: false,
+        polygon: true,
         pixelSize: 10,
-        headAngle: 30,
+        headAngle: 60,
         pathOptions: {
             stroke: false,
             weight: 2,
@@ -61,7 +59,7 @@ L.Symbol.ArrowHead = L.Class.extend({
         L.Util.setOptions(this, options);
     },
 
-    buildSymbol: function(dirPoint, map, index, total) {
+    buildSymbol: function(dirPoint, latLngs, map, index, total) {
         var opts = this.options;
         var path;
         if(opts.polygon) {
@@ -75,7 +73,7 @@ L.Symbol.ArrowHead = L.Class.extend({
     _buildArrowPath: function (dirPoint, map) {
         var tipPoint = map.project(dirPoint.latLng);
         var direction = (-(dirPoint.heading - 90)) * L.LatLng.DEG_TO_RAD;
-        var radianArrowAngle = this.options.headAngle * L.LatLng.DEG_TO_RAD; 
+        var radianArrowAngle = this.options.headAngle / 2 * L.LatLng.DEG_TO_RAD; 
         
         var headAngle1 = direction + radianArrowAngle,
             headAngle2 = direction - radianArrowAngle;
@@ -108,29 +106,9 @@ L.Symbol.Marker = L.Class.extend({
         L.Util.setOptions(this, options);
     },
 
-    buildSymbol: function(directionPoint, map, index, total) {
+    buildSymbol: function(directionPoint, latLngs, map, index, total) {
         return new L.Marker(directionPoint.latLng, this.options.markerOptions);
     }
 });
 
-L.Symbol.Number = L.Symbol.Marker.extend({
-    isZoomDependant: false,
 
-    options: {
-        markerOptions: {
-            draggable: false,
-            clickable: false
-        }
-    },
-    
-    initialize: function (options) {
-        L.Symbol.Marker.prototype.initialize.call(this);
-        L.Util.setOptions(this, options);
-    },
-    
-    buildSymbol: function(directionPoint, map, index, total) {
-        var marker = L.Symbol.Marker.prototype.buildSymbol.call(this, directionPoint, index, total);
-        marker.setIcon(new L.DivIcon({html:''+index}));
-        return marker;
-    }
-});

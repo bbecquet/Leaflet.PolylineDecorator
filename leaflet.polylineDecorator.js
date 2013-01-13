@@ -60,20 +60,22 @@ L.GeometryUtil = {
         // 2. find the starting point by using the offsetRatio
         var previous = L.GeometryUtil.interpolateOnPointPath(pts, offsetRatio);
         positions.push(previous);
-        // 3. consider only the rest of the path, starting at the previous point
-        var remainingPath = pts;
-        remainingPath = remainingPath.slice(previous.predecessor);
-        remainingPath[0] = previous.pt;
-        var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
-        // 4. project as a ratio of the remaining length,
-        // and repeat while there is room for another point of the pattern
-        while(repeatIntervalLength <= remainingLength) {
-            previous = L.GeometryUtil.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
-            positions.push(previous);
+        if(repeatRatio > 0) {
+            // 3. consider only the rest of the path, starting at the previous point
+            var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
             remainingPath[0] = previous.pt;
-            remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
-         }
+            var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
+            // 4. project as a ratio of the remaining length,
+            // and repeat while there is room for another point of the pattern
+            while(repeatIntervalLength <= remainingLength) {
+                previous = L.GeometryUtil.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
+                positions.push(previous);
+                remainingPath = remainingPath.slice(previous.predecessor);
+                remainingPath[0] = previous.pt;
+                remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
+            }
+        }
         return positions;
     },
 
@@ -172,16 +174,14 @@ L.Symbol.Dash = L.Class.extend({
     
     options: {
         pixelSize: 10,
-        pathOptions: {
-            weight: 3
-        }
+        pathOptions: { }
     },
     
     initialize: function (options) {
         L.Util.setOptions(this, options);
     },
 
-    buildSymbol: function(dirPoint, map, index, total) {
+    buildSymbol: function(dirPoint, latLngs, map, index, total) {
         var opts = this.options;
         
         // for a dot, nothing more to compute
@@ -205,9 +205,9 @@ L.Symbol.ArrowHead = L.Class.extend({
     isZoomDependant: true,
     
     options: {
-        polygon: false,
+        polygon: true,
         pixelSize: 10,
-        headAngle: 30,
+        headAngle: 60,
         pathOptions: {
             stroke: false,
             weight: 2,
@@ -219,7 +219,7 @@ L.Symbol.ArrowHead = L.Class.extend({
         L.Util.setOptions(this, options);
     },
 
-    buildSymbol: function(dirPoint, map, index, total) {
+    buildSymbol: function(dirPoint, latLngs, map, index, total) {
         var opts = this.options;
         var path;
         if(opts.polygon) {
@@ -233,7 +233,7 @@ L.Symbol.ArrowHead = L.Class.extend({
     _buildArrowPath: function (dirPoint, map) {
         var tipPoint = map.project(dirPoint.latLng);
         var direction = (-(dirPoint.heading - 90)) * L.LatLng.DEG_TO_RAD;
-        var radianArrowAngle = this.options.headAngle * L.LatLng.DEG_TO_RAD; 
+        var radianArrowAngle = this.options.headAngle / 2 * L.LatLng.DEG_TO_RAD; 
         
         var headAngle1 = direction + radianArrowAngle,
             headAngle2 = direction - radianArrowAngle;
@@ -266,32 +266,12 @@ L.Symbol.Marker = L.Class.extend({
         L.Util.setOptions(this, options);
     },
 
-    buildSymbol: function(directionPoint, map, index, total) {
+    buildSymbol: function(directionPoint, latLngs, map, index, total) {
         return new L.Marker(directionPoint.latLng, this.options.markerOptions);
     }
 });
 
-L.Symbol.Number = L.Symbol.Marker.extend({
-    isZoomDependant: false,
 
-    options: {
-        markerOptions: {
-            draggable: false,
-            clickable: false
-        }
-    },
-    
-    initialize: function (options) {
-        L.Symbol.Marker.prototype.initialize.call(this);
-        L.Util.setOptions(this, options);
-    },
-    
-    buildSymbol: function(directionPoint, map, index, total) {
-        var marker = L.Symbol.Marker.prototype.buildSymbol.call(this, directionPoint, index, total);
-        marker.setIcon(new L.DivIcon({html:''+index}));
-        return marker;
-    }
-});
 
 L.PolylineDecorator = L.LayerGroup.extend({
     options: {
@@ -325,7 +305,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     _parsePatternDef: function(patternDef, latLngs) {
         var pattern = {
             cache: [],
-            symbolFactory: patternDef.symbolFactory,
+            symbolFactory: patternDef.symbol,
             isOffsetInPixels: false,
             isRepeatInPixels: false
         };
@@ -373,7 +353,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     _buildSymbols: function(symbolFactory, directionPoints) {
         var symbols = [];
         for(var i=0, l=directionPoints.length; i<l; i++) {
-            symbols.push(symbolFactory.buildSymbol(directionPoints[i], this._map, i, l));
+            symbols.push(symbolFactory.buildSymbol(directionPoints[i], this._latLngs, this._map, i, l));
         }
         return symbols;
     },
@@ -389,23 +369,23 @@ L.PolylineDecorator = L.LayerGroup.extend({
             return dirPoints;
         
         // polyline can be defined as a L.Polyline object or just an array of coordinates
-        var latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
-        if(latLngs.length < 2) { return []; }
+        this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
+        if(this._latLngs.length < 2) { return []; }
 
         var offset, repeat, pathPixelLength = null;
         if(pattern.isOffsetInPixels) {
-            pathPixelLength =  L.GeometryUtil.getPixelLength(latLngs, this._map);
+            pathPixelLength =  L.GeometryUtil.getPixelLength(this._latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
         } else {
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength != null) ? pathPixelLength : L.GeometryUtil.getPixelLength(latLngs, this._map);
+            pathPixelLength = (pathPixelLength != null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.GeometryUtil.projectPatternOnPath(latLngs, offset, repeat, this._map);
+        dirPoints = L.GeometryUtil.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
         pattern.cache[this._map.getZoom()] = dirPoints;
         
         return dirPoints;
