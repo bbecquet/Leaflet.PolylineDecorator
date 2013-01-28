@@ -8,7 +8,12 @@ L.PolylineDecorator = L.LayerGroup.extend({
         L.LayerGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
         this._polyline = polyline;
-        
+        this._directionPointCache = [];
+        this._initPatterns();
+    },
+
+    _initPatterns: function() {
+        this._directionPointCache = [];
         this._isZoomDependant = false;
         this._patterns = [];
         var pattern;
@@ -22,7 +27,16 @@ L.PolylineDecorator = L.LayerGroup.extend({
              || pattern.isRepeatInPixels 
              || pattern.symbolFactory.isZoomDependant;
         }
-        this._directionPointCache = [];
+    },
+
+    /**
+    * Changes the patterns used by this decorator 
+    * and redraws the new one.
+    */
+    setPatterns: function(patterns) {
+        this.options.patterns = patterns;
+        this._initPatterns();
+        this._softRedraw();
     },
 
     /**
