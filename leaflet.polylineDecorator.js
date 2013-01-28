@@ -179,6 +179,7 @@ L.Symbol.Dash = L.Class.extend({
     
     initialize: function (options) {
         L.Util.setOptions(this, options);
+        this.options.pathOptions.clickable = false;
     },
 
     buildSymbol: function(dirPoint, latLngs, map, index, total) {
@@ -210,13 +211,13 @@ L.Symbol.ArrowHead = L.Class.extend({
         headAngle: 60,
         pathOptions: {
             stroke: false,
-            weight: 2,
-            clickable: false
+            weight: 2
         }
     },
     
     initialize: function (options) {
         L.Util.setOptions(this, options);
+        this.options.pathOptions.clickable = false;
     },
 
     buildSymbol: function(dirPoint, latLngs, map, index, total) {
@@ -256,14 +257,13 @@ L.Symbol.Marker = L.Class.extend({
     isZoomDependant: false,
 
     options: {
-        markerOptions: {
-            draggable: false,
-            clickable: false
-        }
+        markerOptions: { }
     },
     
     initialize: function (options) {
         L.Util.setOptions(this, options);
+        this.options.markerOptions.clickable = false;
+        this.options.markerOptions.draggable = false;
     },
 
     buildSymbol: function(directionPoint, latLngs, map, index, total) {
