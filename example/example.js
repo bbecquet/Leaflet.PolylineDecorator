@@ -11,13 +11,18 @@ function init() {
         ]
     });
     
-    // --- Arrow ---
+    // --- Arrow, with animation to demonstrate the use of setPatterns ---
     var arrow = L.polyline([[45.15105, -5.66895], [49.00905, -9.22852]], {}).addTo(map);
-    var arrowHead = L.polylineDecorator(arrow, {
-        patterns: [
-            {offset: '100%', repeat: 0, symbol: new L.Symbol.ArrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true, clickable: false }})}
-        ]
-    }).addTo(map);
+    var arrowHead = L.polylineDecorator(arrow).addTo(map);
+    
+    var arrowOffset = 0;
+    var anim = window.setInterval(function() {
+        arrowHead.setPatterns([
+            {offset: arrowOffset+'%', repeat: 0, symbol: new L.Symbol.ArrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ])
+        if(++arrowOffset > 100)
+            arrowOffset = 0;
+    }, 100);
 
     // --- Polygon ---
     var polygon = L.polygon([[54, -6], [55, -7], [56, -2], [55, 1], [53, 0], [54, -6]], {color: "#ff7800", weight: 1}).addTo(map);
