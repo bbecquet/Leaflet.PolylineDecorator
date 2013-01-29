@@ -1,4 +1,3 @@
-
 L.GeometryUtil = {
     computeAngle: function(a, b) {
         return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
@@ -45,7 +44,7 @@ L.GeometryUtil = {
             pathAsPoints[i] = map.latLngToLayerPoint(path[i]);
         }
         // project the pattern as pixel points
-        var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
+        var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio, map);
         // and convert it to latlngs;
         for(var i=0, l=pattern.length; i<l; i++) {
             pattern[i].latLng = map.layerPointToLatLng(pattern[i].pt);
@@ -53,7 +52,7 @@ L.GeometryUtil = {
         return pattern;
     },
     
-    projectPatternOnPointPath: function (pts, offsetRatio, repeatRatio) {
+    projectPatternOnPointPath: function (pts, offsetRatio, repeatRatio, map) {
         var positions = [];
         // 1. compute the absolute interval length in pixels
         var repeatIntervalLength = L.GeometryUtil.getPointPathPixelLength(pts) * repeatRatio;
