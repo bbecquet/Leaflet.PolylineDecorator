@@ -65,7 +65,7 @@ L.GeometryUtil = {
             var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
             remainingPath[0] = previous.pt;
-            var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
+            var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath);
             // 4. project as a ratio of the remaining length,
             // and repeat while there is room for another point of the pattern
             while(repeatIntervalLength <= remainingLength) {
@@ -73,7 +73,7 @@ L.GeometryUtil = {
                 positions.push(previous);
                 remainingPath = remainingPath.slice(previous.predecessor);
                 remainingPath[0] = previous.pt;
-                remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath, map);
+                remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath);
             }
         }
         return positions;
