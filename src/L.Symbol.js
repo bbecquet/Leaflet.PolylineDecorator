@@ -97,7 +97,8 @@ L.Symbol.Marker = L.Class.extend({
     isZoomDependant: false,
 
     options: {
-        markerOptions: { }
+        markerOptions: { },
+        rotate: false
     },
     
     initialize: function (options) {
@@ -107,7 +108,13 @@ L.Symbol.Marker = L.Class.extend({
     },
 
     buildSymbol: function(directionPoint, latLngs, map, index, total) {
-        return new L.Marker(directionPoint.latLng, this.options.markerOptions);
+        if(!this.options.rotate) {
+            return new L.Marker(directionPoint.latLng, this.options.markerOptions);
+        }
+        else {
+            this.options.markerOptions.angle = directionPoint.heading;
+            return new L.RotatedMarker(directionPoint.latLng, this.options.markerOptions);
+        }
     }
 });
 
