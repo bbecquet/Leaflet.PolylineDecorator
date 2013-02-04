@@ -105,6 +105,7 @@ L.Symbol.Marker = L.Class.extend({
         L.Util.setOptions(this, options);
         this.options.markerOptions.clickable = false;
         this.options.markerOptions.draggable = false;
+        this.isZoomDependant = (L.Browser.ie && this.options.rotate);
     },
 
     buildSymbol: function(directionPoint, latLngs, map, index, total) {
