@@ -162,20 +162,30 @@ L.RotatedMarker = L.Marker.extend({
     options: {
         angle: 0
     },
+    statics: {
+        // determine the best and only CSS transform rule to use for this browser
+        bestTransform: L.DomUtil.testProp([
+            'transform',
+            'WebkitTransform',
+            'msTransform',
+            'MozTransform',
+            'OTransform'
+        ])
+    },
     _setPos: function (pos) {
         L.Marker.prototype._setPos.call(this, pos);
-        if (!L.Browser.ie || L.Browser.ie3d) {
-            var rotate = ' rotate(' + this.options.angle + 'deg)';
-            this._icon.style.MozTransform += rotate;
-            this._icon.style.MsTransform += rotate;
-            this._icon.style.OTransform += rotate;
-            this._icon.style.WebkitTransform += rotate;
-        } else {
-            // IE6, IE7, IE8
+        
+        var rotate = ' rotate(' + this.options.angle + 'deg)';
+        if (L.RotatedMarker.bestTransform) {
+            // use the CSS transform rule if available
+            this._icon.style[L.RotatedMarker.bestTransform] += rotate;
+        } else if(L.Browser.ie) {
+            // fallback for IE6, IE7, IE8
             var rad = this.options.angle * L.LatLng.DEG_TO_RAD,
                 costheta = Math.cos(rad),
                 sintheta = Math.sin(rad);
-            this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' + costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';
+            this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' + 
+                costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';                
         }
     }
 });﻿/**
@@ -285,6 +295,7 @@ L.Symbol.Marker = L.Class.extend({
         L.Util.setOptions(this, options);
         this.options.markerOptions.clickable = false;
         this.options.markerOptions.draggable = false;
+        this.isZoomDependant = (L.Browser.ie && this.options.rotate);
     },
 
     buildSymbol: function(directionPoint, latLngs, map, index, total) {
@@ -412,6 +423,11 @@ L.PolylineDecorator = L.LayerGroup.extend({
         // polyline can be defined as a L.Polyline object or just an array of coordinates
         this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
         if(this._latLngs.length < 2) { return []; }
+        // as of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
+        // our algorithm needs it, so we add it back explicitely.
+        if(this._polyline instanceof L.Polygon) {
+            this._latLngs.push(this._latLngs[0]);
+        }
 
         var offset, repeat, pathPixelLength = null;
         if(pattern.isOffsetInPixels) {

@@ -111,6 +111,11 @@ L.PolylineDecorator = L.LayerGroup.extend({
         // polyline can be defined as a L.Polyline object or just an array of coordinates
         this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
         if(this._latLngs.length < 2) { return []; }
+        // as of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
+        // our algorithm needs it, so we add it back explicitely.
+        if(this._polyline instanceof L.Polygon) {
+            this._latLngs.push(this._latLngs[0]);
+        }
 
         var offset, repeat, pathPixelLength = null;
         if(pattern.isOffsetInPixels) {
