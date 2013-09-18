@@ -8,12 +8,10 @@ L.PolylineDecorator = L.LayerGroup.extend({
         L.LayerGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
         this._polyline = polyline;
-        this._directionPointCache = [];
         this._initPatterns();
     },
 
     _initPatterns: function() {
-        this._directionPointCache = [];
         this._isZoomDependant = false;
         this._patterns = [];
         var pattern;
@@ -22,10 +20,10 @@ L.PolylineDecorator = L.LayerGroup.extend({
             pattern = this._parsePatternDef(this.options.patterns[i]);
             this._patterns.push(pattern);
             // determines if we have to recompute the pattern on each zoom change
-            this._isZoomDependant = this._isZoomDependant
-             || pattern.isOffsetInPixels
-             || pattern.isRepeatInPixels 
-             || pattern.symbolFactory.isZoomDependant;
+            this._isZoomDependant = this._isZoomDependant ||
+                pattern.isOffsetInPixels ||
+                pattern.isRepeatInPixels ||
+                pattern.symbolFactory.isZoomDependant;
         }
     },
 
@@ -112,7 +110,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
         this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
         if(this._latLngs.length < 2) { return []; }
         // as of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
-        // our algorithm needs it, so we add it back explicitely.
+        // our algorithm needs it, so we add it back explicitly.
         if(this._polyline instanceof L.Polygon) {
             this._latLngs.push(this._latLngs[0]);
         }
@@ -125,7 +123,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength != null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
+            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;
