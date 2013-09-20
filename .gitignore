@@ -1,2 +1,3 @@
-build.sh
+*.sh
+*.ps1
 *~
