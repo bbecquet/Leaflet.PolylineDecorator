@@ -1,5 +1,5 @@
-
-L.GeometryUtil = {
+﻿
+L.LineUtil.PolylineDecorator = {
     computeAngle: function(a, b) {
         return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
     },
@@ -57,24 +57,24 @@ L.GeometryUtil = {
     projectPatternOnPointPath: function (pts, offsetRatio, repeatRatio) {
         var positions = [];
         // 1. compute the absolute interval length in pixels
-        var repeatIntervalLength = L.GeometryUtil.getPointPathPixelLength(pts) * repeatRatio;
+        var repeatIntervalLength = this.getPointPathPixelLength(pts) * repeatRatio;
         // 2. find the starting point by using the offsetRatio
-        var previous = L.GeometryUtil.interpolateOnPointPath(pts, offsetRatio);
+        var previous = this.interpolateOnPointPath(pts, offsetRatio);
         positions.push(previous);
         if(repeatRatio > 0) {
             // 3. consider only the rest of the path, starting at the previous point
             var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
             remainingPath[0] = previous.pt;
-            var remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath);
+            var remainingLength = this.getPointPathPixelLength(remainingPath);
             // 4. project as a ratio of the remaining length,
             // and repeat while there is room for another point of the pattern
             while(repeatIntervalLength <= remainingLength) {
-                previous = L.GeometryUtil.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
+                previous = this.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
                 positions.push(previous);
                 remainingPath = remainingPath.slice(previous.predecessor);
                 remainingPath[0] = previous.pt;
-                remainingLength = L.GeometryUtil.getPointPathPixelLength(remainingPath);
+                remainingLength = this.getPointPathPixelLength(remainingPath);
             }
         }
         return positions;
@@ -99,7 +99,7 @@ L.GeometryUtil = {
             return {
                 pt: pts[0],
                 predecessor: 0,
-                heading: L.GeometryUtil.computeAngle(pts[0], pts[1])
+                heading: this.computeAngle(pts[0], pts[1])
             };
         }
         // ratio >=1 => last vertex
@@ -107,19 +107,19 @@ L.GeometryUtil = {
             return {
                 pt: pts[nbVertices - 1],
                 predecessor: nbVertices - 1,
-                heading: L.GeometryUtil.computeAngle(pts[nbVertices - 2], pts[nbVertices - 1])
+                heading: this.computeAngle(pts[nbVertices - 2], pts[nbVertices - 1])
             };
         }
         // 1-segment-only path => direct linear interpolation
         if (nbVertices == 2) {
             return {
-                pt: L.GeometryUtil.interpolateBetweenPoints(pts[0], pts[1], ratio),
+                pt: this.interpolateBetweenPoints(pts[0], pts[1], ratio),
                 predecessor: 0,
-                heading: L.GeometryUtil.computeAngle(pts[0], pts[1])
+                heading: this.computeAngle(pts[0], pts[1])
             };
         }
             
-        var pathLength = L.GeometryUtil.getPointPathPixelLength(pts);
+        var pathLength = this.getPointPathPixelLength(pts);
         var a = pts[0], b = a,
             ratioA = 0, ratioB = 0,
             distB = 0;
@@ -138,9 +138,9 @@ L.GeometryUtil = {
         var segmentRatio = (ratio - ratioA) / (ratioB - ratioA);
 
         return {
-            pt: L.GeometryUtil.interpolateBetweenPoints(a, b, segmentRatio),
+            pt: this.interpolateBetweenPoints(a, b, segmentRatio),
             predecessor: i-2,
-            heading: L.GeometryUtil.computeAngle(a, b)
+            heading: this.computeAngle(a, b)
         };
     },
     
@@ -189,7 +189,8 @@ L.RotatedMarker = L.Marker.extend({
                 costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';                
         }
     }
-});﻿/**
+});
+/**
 * Defines several classes of symbol factories,
 * to be used with L.PolylineDecorator
 */
@@ -430,18 +431,18 @@ L.PolylineDecorator = L.LayerGroup.extend({
 
         var offset, repeat, pathPixelLength = null;
         if(pattern.isOffsetInPixels) {
-            pathPixelLength =  L.GeometryUtil.getPixelLength(this._latLngs, this._map);
+            pathPixelLength =  L.LineUtil.PolylineDecorator.getPixelLength(this._latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
         } else {
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
+            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(this._latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.GeometryUtil.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
+        dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
         pattern.cache[this._map.getZoom()] = dirPoints;
         
         return dirPoints;

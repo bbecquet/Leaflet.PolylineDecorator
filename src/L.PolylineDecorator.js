@@ -117,18 +117,18 @@ L.PolylineDecorator = L.LayerGroup.extend({
 
         var offset, repeat, pathPixelLength = null;
         if(pattern.isOffsetInPixels) {
-            pathPixelLength =  L.GeometryUtil.getPixelLength(this._latLngs, this._map);
+            pathPixelLength =  L.LineUtil.PolylineDecorator.getPixelLength(this._latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
         } else {
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
+            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(this._latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.GeometryUtil.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
+        dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
         pattern.cache[this._map.getZoom()] = dirPoints;
         
         return dirPoints;
