@@ -9,9 +9,10 @@ L.GeometryUtil = {
         if(nbPts < 2) {
             return 0;
         }
-        var dist = 0;
-        var prevPt = pts[0], pt; 
-        for(var i=1, l=pts.length; i<l; i++) {
+        var dist = 0,
+            prevPt = pts[0],
+            pt;
+        for(var i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = pts[i]);
             prevPt = pt;
         } 
@@ -19,14 +20,14 @@ L.GeometryUtil = {
     },
 
     getPixelLength: function(pl, map) {
-        var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl;
-        var nbPts = ll.length;
+        var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl,
+            nbPts = ll.length;
         if(nbPts < 2) {
             return 0;
         }
-        var dist = 0;
-        var prevPt = map.latLngToLayerPoint(ll[0]), pt; 
-        for(var i=1, l=ll.length; i<l; i++) {
+        var dist = 0,
+            prevPt = map.latLngToLayerPoint(ll[0]), pt; 
+        for(var i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = map.latLngToLayerPoint(ll[i]));
             prevPt = pt;
         } 
@@ -40,14 +41,14 @@ L.GeometryUtil = {
     * map: the map, to access the current projection state
     */
     projectPatternOnPath: function (path, offsetRatio, repeatRatio, map) {
-        var pathAsPoints = [];
-        for(var i=0, l=path.length; i<l; i++) {
+        var pathAsPoints = [], i;
+        for(i=0, l=path.length; i<l; i++) {
             pathAsPoints[i] = map.latLngToLayerPoint(path[i]);
         }
         // project the pattern as pixel points
         var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
         // and convert it to latlngs;
-        for(var i=0, l=pattern.length; i<l; i++) {
+        for(i=0, l=pattern.length; i<l; i++) {
             pattern[i].latLng = map.layerPointToLatLng(pattern[i].pt);
         }        
         return pattern;
@@ -119,8 +120,8 @@ L.GeometryUtil = {
         }
             
         var pathLength = L.GeometryUtil.getPointPathPixelLength(pts);
-        var a = b = pts[0],
-            ratioA = ratioB = 0,
+        var a = pts[0], b = a,
+            ratioA = 0, ratioB = 0,
             distB = 0;
         // follow the path segments until we find the one
         // on which the point must lie => [ab] 
@@ -140,7 +141,7 @@ L.GeometryUtil = {
             pt: L.GeometryUtil.interpolateBetweenPoints(a, b, segmentRatio),
             predecessor: i-2,
             heading: L.GeometryUtil.computeAngle(a, b)
-        }
+        };
     },
     
     /**
@@ -157,7 +158,7 @@ L.GeometryUtil = {
         // special case where points lie on the same vertical axis
         return new L.Point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
     }
-}
+};
 L.RotatedMarker = L.Marker.extend({
     options: {
         angle: 0
@@ -320,12 +321,10 @@ L.PolylineDecorator = L.LayerGroup.extend({
         L.LayerGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
         this._polyline = polyline;
-        this._directionPointCache = [];
         this._initPatterns();
     },
 
     _initPatterns: function() {
-        this._directionPointCache = [];
         this._isZoomDependant = false;
         this._patterns = [];
         var pattern;
@@ -334,10 +333,10 @@ L.PolylineDecorator = L.LayerGroup.extend({
             pattern = this._parsePatternDef(this.options.patterns[i]);
             this._patterns.push(pattern);
             // determines if we have to recompute the pattern on each zoom change
-            this._isZoomDependant = this._isZoomDependant
-             || pattern.isOffsetInPixels
-             || pattern.isRepeatInPixels 
-             || pattern.symbolFactory.isZoomDependant;
+            this._isZoomDependant = this._isZoomDependant ||
+                pattern.isOffsetInPixels ||
+                pattern.isRepeatInPixels ||
+                pattern.symbolFactory.isZoomDependant;
         }
     },
 
@@ -424,7 +423,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
         this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
         if(this._latLngs.length < 2) { return []; }
         // as of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
-        // our algorithm needs it, so we add it back explicitely.
+        // our algorithm needs it, so we add it back explicitly.
         if(this._polyline instanceof L.Polygon) {
             this._latLngs.push(this._latLngs[0]);
         }
@@ -437,7 +436,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength != null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
+            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.GeometryUtil.getPixelLength(this._latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;

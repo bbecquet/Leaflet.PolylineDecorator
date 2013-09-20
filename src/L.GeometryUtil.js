@@ -9,9 +9,10 @@ L.GeometryUtil = {
         if(nbPts < 2) {
             return 0;
         }
-        var dist = 0;
-        var prevPt = pts[0], pt; 
-        for(var i=1, l=pts.length; i<l; i++) {
+        var dist = 0,
+            prevPt = pts[0],
+            pt;
+        for(var i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = pts[i]);
             prevPt = pt;
         } 
@@ -19,14 +20,14 @@ L.GeometryUtil = {
     },
 
     getPixelLength: function(pl, map) {
-        var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl;
-        var nbPts = ll.length;
+        var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl,
+            nbPts = ll.length;
         if(nbPts < 2) {
             return 0;
         }
-        var dist = 0;
-        var prevPt = map.latLngToLayerPoint(ll[0]), pt; 
-        for(var i=1, l=ll.length; i<l; i++) {
+        var dist = 0,
+            prevPt = map.latLngToLayerPoint(ll[0]), pt; 
+        for(var i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = map.latLngToLayerPoint(ll[i]));
             prevPt = pt;
         } 
@@ -40,14 +41,14 @@ L.GeometryUtil = {
     * map: the map, to access the current projection state
     */
     projectPatternOnPath: function (path, offsetRatio, repeatRatio, map) {
-        var pathAsPoints = [];
-        for(var i=0, l=path.length; i<l; i++) {
+        var pathAsPoints = [], i;
+        for(i=0, l=path.length; i<l; i++) {
             pathAsPoints[i] = map.latLngToLayerPoint(path[i]);
         }
         // project the pattern as pixel points
         var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
         // and convert it to latlngs;
-        for(var i=0, l=pattern.length; i<l; i++) {
+        for(i=0, l=pattern.length; i<l; i++) {
             pattern[i].latLng = map.layerPointToLatLng(pattern[i].pt);
         }        
         return pattern;
@@ -119,8 +120,8 @@ L.GeometryUtil = {
         }
             
         var pathLength = L.GeometryUtil.getPointPathPixelLength(pts);
-        var a = b = pts[0],
-            ratioA = ratioB = 0,
+        var a = pts[0], b = a,
+            ratioA = 0, ratioB = 0,
             distB = 0;
         // follow the path segments until we find the one
         // on which the point must lie => [ab] 
@@ -140,7 +141,7 @@ L.GeometryUtil = {
             pt: L.GeometryUtil.interpolateBetweenPoints(a, b, segmentRatio),
             predecessor: i-2,
             heading: L.GeometryUtil.computeAngle(a, b)
-        }
+        };
     },
     
     /**
@@ -157,4 +158,4 @@ L.GeometryUtil = {
         // special case where points lie on the same vertical axis
         return new L.Point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
     }
-}
+};
