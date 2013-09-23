@@ -67,5 +67,33 @@ function init() {
             ]
         }
     ).addTo(map);
+
+    // --- Example with an array of Polylines ---
+    var multiCoords1 = [
+        [[47.5468, -0.7910], [48.8068, -0.1318], [49.1242, 1.6699], [49.4966, 3.2958], [51.4266, 2.8564], [51.7542, 2.1093]], 
+        [[48.0193, -2.8125], [46.3165, -2.8564], [44.9336, -1.0107], [44.5278, 1.5820], [44.8714, 3.7353], [45.8287, 5.1855], [48.1953, 5.1416]], 
+        [[45.9205, 0.4394], [46.7699, 0.9228], [47.6061, 2.5488], [47.7540, 3.3837]]
+    ];
+    var plArray = [];
+    for(var i=0; i<multiCoords1.length; i++) {
+        plArray.push(L.polyline(multiCoords1[i]).addTo(map));
+    }
+    L.polylineDecorator(multiCoords1, {
+        patterns: [
+            {offset: 25, repeat: 50, symbol: new L.Symbol.ArrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0}})}
+        ]
+    }).addTo(map);
+
+    // --- Example with a MultiPolygon ---
+    var multiCoords2 = [
+        [[55.4788, 4.1748], [53.7487, 4.5263], [52.4560, 7.3388], [56.3165, 7.8662]],
+        [[53.9302, 9.2724] , [52.8027, 9.8876], [52.1604, 12.0849], [53.5141, 14.5019], [54.9523, 14.3261], [55.5037, 10.5908]]
+    ];
+    var multiPl = L.multiPolygon(multiCoords2, {weight: 0, fillOpacity: 0}).addTo(map);
+    L.polylineDecorator(multiPl, {
+        patterns: [
+            {offset: 0, repeat: 10, symbol: new L.Symbol.Dash({pixelSize: 0, pathOptions: {color: '#080'}})}
+        ]
+    }).addTo(map);
 }
 

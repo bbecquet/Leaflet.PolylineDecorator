@@ -1,4 +1,4 @@
-﻿
+
 L.LineUtil.PolylineDecorator = {
     computeAngle: function(a, b) {
         return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
@@ -189,8 +189,7 @@ L.RotatedMarker = L.Marker.extend({
                 costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';                
         }
     }
-});
-/**
+});﻿/**
 * Defines several classes of symbol factories,
 * to be used with L.PolylineDecorator
 */
@@ -318,12 +317,64 @@ L.PolylineDecorator = L.LayerGroup.extend({
         patterns: []
     },
 
-    initialize: function(polyline, options) {
+    initialize: function(p, options) {
         L.LayerGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
-        this._polyline = polyline;
+        this._paths = [];
+        this._initPaths(p);
         this._initPatterns();
     },
+
+    /**
+    * Deals with all the different cases. p can be one of these types:
+    * array of LatLng, array of 2-number arrays, Polyline, Polygon,
+    * array of one of the previous, MultiPolyline, MultiPolygon. 
+    */
+    _initPaths: function(p) {
+        var isPolygon = false;
+        if(p instanceof L.MultiPolyline || (isPolygon = (p instanceof L.MultiPolygon))) {
+            var lines = p.getLatLngs();
+            for(var i=0; i<lines.length; i++) {
+                this._initPath(lines[i], isPolygon);
+            }   
+        } else if(p instanceof L.Polyline) {
+            this._initPath(p.getLatLngs(), (p instanceof L.Polygon));
+        } else if(L.Util.isArray(p) && p.length > 0) {
+            if(p[0] instanceof L.Polyline) {
+                for(var i=0; i<p.length; i++) {
+                    this._initPath(p[i].getLatLngs(), (p[i] instanceof L.Polygon));
+                }
+            } else {
+                this._initPath(p);
+            }
+        }
+    },
+
+    _isCoordArray: function(ll) {
+        return(L.Util.isArray(ll) && ll.length > 0 && (
+            ll[0] instanceof L.LatLng || 
+            (L.Util.isArray(ll[0]) && ll[0].length == 2 && typeof ll[0][0] === 'number')
+        ));
+    },
+
+    _initPath: function(path, isPolygon) {
+        var latLngs;
+        // It may still be an array of array of coordinates
+        // (ex: polygon with rings)
+        if(this._isCoordArray(path)) {
+            latLngs = [path];
+        } else {
+            latLngs = path;
+        }
+        for(var i=0; i<latLngs.length; i++) {
+            // As of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
+            // Our algorithm needs it, so we add it back explicitly.
+            if(isPolygon) {
+                latLngs[i].push(latLngs[i][0]);
+            }
+            this._paths.push(latLngs[i]);
+        }
+    },   
 
     _initPatterns: function() {
         this._isZoomDependant = false;
@@ -402,12 +453,21 @@ L.PolylineDecorator = L.LayerGroup.extend({
     /**
     * Returns an array of ILayers object
     */
-    _buildSymbols: function(symbolFactory, directionPoints) {
+    _buildSymbols: function(latLngs, symbolFactory, directionPoints) {
         var symbols = [];
         for(var i=0, l=directionPoints.length; i<l; i++) {
-            symbols.push(symbolFactory.buildSymbol(directionPoints[i], this._latLngs, this._map, i, l));
+            symbols.push(symbolFactory.buildSymbol(directionPoints[i], latLngs, this._map, i, l));
         }
         return symbols;
+    },
+
+    _getCache: function(pattern, zoom, pathIndex) {
+        var zoomCache = pattern.cache[zoom];
+        if(typeof zoomCache === 'undefined') {
+            pattern.cache[zoom] = [];
+            return null;
+        }
+        return zoomCache[pathIndex];
     },
 
     /**
@@ -415,35 +475,29 @@ L.PolylineDecorator = L.LayerGroup.extend({
     * that define positions and directions of the symbols
     * on the path 
     */
-    _getDirectionPoints: function(pattern) {
-        var dirPoints = pattern.cache[this._map.getZoom()];
-        if(typeof dirPoints != 'undefined')
+    _getDirectionPoints: function(pathIndex, pattern) {
+        var zoom = this._map.getZoom();
+        var dirPoints = this._getCache(pattern, zoom, pathIndex);
+        if(dirPoints) {
             return dirPoints;
-        
-        // polyline can be defined as a L.Polyline object or just an array of coordinates
-        this._latLngs = (this._polyline instanceof L.Polyline) ? this._polyline.getLatLngs() : this._polyline;
-        if(this._latLngs.length < 2) { return []; }
-        // as of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
-        // our algorithm needs it, so we add it back explicitly.
-        if(this._polyline instanceof L.Polygon) {
-            this._latLngs.push(this._latLngs[0]);
         }
 
-        var offset, repeat, pathPixelLength = null;
+        var offset, repeat, pathPixelLength = null, latLngs = this._paths[pathIndex];
         if(pattern.isOffsetInPixels) {
-            pathPixelLength =  L.LineUtil.PolylineDecorator.getPixelLength(this._latLngs, this._map);
+            pathPixelLength =  L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
         } else {
             offset = pattern.offset;
         }
         if(pattern.isRepeatInPixels) {
-            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(this._latLngs, this._map);
+            pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength; 
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(this._latLngs, offset, repeat, this._map);
-        pattern.cache[this._map.getZoom()] = dirPoints;
+        dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(latLngs, offset, repeat, this._map);
+        // save in cache to avoid recomputing this
+        pattern.cache[zoom][pathIndex] = dirPoints;
         
         return dirPoints;
     },
@@ -477,10 +531,13 @@ L.PolylineDecorator = L.LayerGroup.extend({
     * Draw a single pattern
     */
     _drawPattern: function(pattern) {
-        var directionPoints = this._getDirectionPoints(pattern);
-        var symbols = this._buildSymbols(pattern.symbolFactory, directionPoints);
-        for (var i=0; i < symbols.length; i++) {
-            this.addLayer(symbols[i]);
+        var directionPoints, symbols;
+        for(var i=0; i < this._paths.length; i++) {
+            directionPoints = this._getDirectionPoints(i, pattern);
+            symbols = this._buildSymbols(this._paths[i], pattern.symbolFactory, directionPoints);
+            for(var j=0; j < symbols.length; j++) {
+                this.addLayer(symbols[j]);
+            }
         }
     },
 
@@ -496,8 +553,8 @@ L.PolylineDecorator = L.LayerGroup.extend({
 /*
  * Allows compact syntax to be used
  */
-L.polylineDecorator = function (polyline, options) {
-    return new L.PolylineDecorator(polyline, options);
+L.polylineDecorator = function (p, options) {
+    return new L.PolylineDecorator(p, options);
 };
 
 
