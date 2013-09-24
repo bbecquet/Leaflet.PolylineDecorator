@@ -42,6 +42,10 @@ L.Symbol.Dash = L.Class.extend({
     }
 });
 
+L.Symbol.dash = function (options) {
+    return new L.Symbol.Dash(options);
+};
+
 L.Symbol.ArrowHead = L.Class.extend({
     isZoomDependant: true,
     
@@ -93,6 +97,10 @@ L.Symbol.ArrowHead = L.Class.extend({
     }
 });
 
+L.Symbol.arrowHead = function (options) {
+    return new L.Symbol.ArrowHead(options);
+};
+
 L.Symbol.Marker = L.Class.extend({
     isZoomDependant: false,
 
@@ -118,5 +126,9 @@ L.Symbol.Marker = L.Class.extend({
         }
     }
 });
+
+L.Symbol.marker = function (options) {
+    return new L.Symbol.Marker(options);
+};
 
 

@@ -29,3 +29,7 @@ L.RotatedMarker = L.Marker.extend({
         }
     }
 });
+
+L.rotatedMarker = function (pos, options) {
+    return new L.RotatedMarker(pos, options);
+};
