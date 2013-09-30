@@ -4,11 +4,10 @@ L.PolylineDecorator = L.LayerGroup.extend({
         patterns: []
     },
 
-    initialize: function(p, options) {
+    initialize: function(paths, options) {
         L.LayerGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
-        this._paths = [];
-        this._initPaths(p);
+        this._initPaths(paths);
         this._initPatterns();
     },
 
@@ -18,6 +17,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     * array of one of the previous, MultiPolyline, MultiPolygon. 
     */
     _initPaths: function(p) {
+        this._paths = [];
         var isPolygon = false;
         if(p instanceof L.MultiPolyline || (isPolygon = (p instanceof L.MultiPolygon))) {
             var lines = p.getLatLngs();
@@ -87,6 +87,15 @@ L.PolylineDecorator = L.LayerGroup.extend({
         this.options.patterns = patterns;
         this._initPatterns();
         this._softRedraw();
+    },
+
+    /**
+    * Changes the patterns used by this decorator 
+    * and redraws the new one.
+    */
+    setPaths: function(paths) {
+        this._initPaths(paths);
+        this.redraw();
     },
 
     /**
@@ -240,8 +249,6 @@ L.PolylineDecorator = L.LayerGroup.extend({
 /*
  * Allows compact syntax to be used
  */
-L.polylineDecorator = function (p, options) {
-    return new L.PolylineDecorator(p, options);
+L.polylineDecorator = function (paths, options) {
+    return new L.PolylineDecorator(paths, options);
 };
-
-
