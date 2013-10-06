@@ -7,6 +7,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     initialize: function(paths, options) {
         L.LayerGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
+        this._map = null;
         this._initPaths(paths);
         this._initPatterns();
     },
@@ -143,6 +144,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     onRemove: function (map) {
         // remove optional map zoom listener
         this._map.off('zoomend', this._softRedraw, this);
+        this._map = null;
         L.LayerGroup.prototype.onRemove.call(this, map);
     },
 
@@ -214,6 +216,8 @@ L.PolylineDecorator = L.LayerGroup.extend({
     },
     
     _redraw: function(clearCache) {
+        if(this._map === null)
+            return;
         this.clearLayers();
         if(clearCache) {
             for(var i=0; i<this._patterns.length; i++) {
