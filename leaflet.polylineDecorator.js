@@ -163,23 +163,12 @@ L.RotatedMarker = L.Marker.extend({
     options: {
         angle: 0
     },
-    statics: {
-        // determine the best and only CSS transform rule to use for this browser
-        bestTransform: L.DomUtil.testProp([
-            'transform',
-            'WebkitTransform',
-            'msTransform',
-            'MozTransform',
-            'OTransform'
-        ])
-    },
     _setPos: function (pos) {
         L.Marker.prototype._setPos.call(this, pos);
         
-        var rotate = ' rotate(' + this.options.angle + 'deg)';
-        if (L.RotatedMarker.bestTransform) {
+        if (L.DomUtil.TRANSFORM) {
             // use the CSS transform rule if available
-            this._icon.style[L.RotatedMarker.bestTransform] += rotate;
+            this._icon.style[L.DomUtil.TRANSFORM] += ' rotate(' + this.options.angle + 'deg)';
         } else if(L.Browser.ie) {
             // fallback for IE6, IE7, IE8
             var rad = this.options.angle * L.LatLng.DEG_TO_RAD,
