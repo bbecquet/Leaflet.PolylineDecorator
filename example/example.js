@@ -83,17 +83,5 @@ function init() {
             {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0}})}
         ]
     }).addTo(map);
-
-    // --- Example with a MultiPolygon ---
-    var multiCoords2 = [
-        [[55.4788, 4.1748], [53.7487, 4.5263], [52.4560, 7.3388], [56.3165, 7.8662]],
-        [[53.9302, 9.2724] , [52.8027, 9.8876], [52.1604, 12.0849], [53.5141, 14.5019], [54.9523, 14.3261], [55.5037, 10.5908]]
-    ];
-    var multiPl = L.multiPolygon(multiCoords2, {weight: 0, fillOpacity: 0}).addTo(map);
-    L.polylineDecorator(multiPl, {
-        patterns: [
-            {offset: 0, repeat: 10, symbol: L.Symbol.dash({pixelSize: 0, pathOptions: {color: '#080'}})}
-        ]
-    }).addTo(map);
 }
 
