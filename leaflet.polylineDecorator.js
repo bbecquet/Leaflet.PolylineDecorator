@@ -26,9 +26,9 @@ L.LineUtil.PolylineDecorator = {
             return 0;
         }
         var dist = 0,
-            prevPt = map.latLngToLayerPoint(ll[0]), pt; 
+            prevPt = map.project(ll[0]), pt; 
         for(var i=1; i<nbPts; i++) {
-            dist += prevPt.distanceTo(pt = map.latLngToLayerPoint(ll[i]));
+            dist += prevPt.distanceTo(pt = map.project(ll[i]));
             prevPt = pt;
         } 
         return dist;
@@ -43,13 +43,13 @@ L.LineUtil.PolylineDecorator = {
     projectPatternOnPath: function (path, offsetRatio, repeatRatio, map) {
         var pathAsPoints = [], i;
         for(i=0, l=path.length; i<l; i++) {
-            pathAsPoints[i] = map.latLngToLayerPoint(path[i]);
+            pathAsPoints[i] = map.project(path[i]);
         }
         // project the pattern as pixel points
         var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
         // and convert it to latlngs;
         for(i=0, l=pattern.length; i<l; i++) {
-            pattern[i].latLng = map.layerPointToLatLng(pattern[i].pt);
+            pattern[i].latLng = map.unproject(pattern[i].pt);
         }        
         return pattern;
     },
