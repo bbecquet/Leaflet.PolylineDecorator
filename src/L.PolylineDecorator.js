@@ -137,13 +137,13 @@ L.PolylineDecorator = L.LayerGroup.extend({
         this._draw();
         // listen to zoom changes to redraw pixel-spaced patterns
         if(this._isZoomDependant) {
-            this._map.on('zoomend', this._softRedraw, this);
+            this._map.on('moveend', this._softRedraw, this);
         }
     },
 
     onRemove: function (map) {
         // remove optional map zoom listener
-        this._map.off('zoomend', this._softRedraw, this);
+        this._map.off('moveend', this._softRedraw, this);
         this._map = null;
         L.LayerGroup.prototype.onRemove.call(this, map);
     },
@@ -236,7 +236,9 @@ L.PolylineDecorator = L.LayerGroup.extend({
             directionPoints = this._getDirectionPoints(i, pattern);
             symbols = this._buildSymbols(this._paths[i], pattern.symbolFactory, directionPoints);
             for(var j=0; j < symbols.length; j++) {
-                this.addLayer(symbols[j]);
+                if (this._map.getBounds().contains(symbols[j]._latlng)) {
+                  this.addLayer(symbols[j]);
+                }
             }
         }
     },
