@@ -2,7 +2,6 @@
   "name": "Leaflet PolylineDecorator",
   "main": "leaflet.polylineDecorator.js",
   "version": "0.7.2",
-  "homepage": "https://github.com/bbecquet/Leaflet.PolylineDecorator",
   "authors": [
     "Benjamin Becquet"
   ],
