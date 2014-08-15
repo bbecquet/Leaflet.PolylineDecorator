@@ -11,6 +11,10 @@
     "Leaflet",
     "Leaflet PolylineDecorator"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Melmer/Leaflet.PolylineDecorator.git"
+  },
   "license": "MIT",
   "ignore": [
     "**/.*",
