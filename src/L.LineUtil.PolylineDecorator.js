@@ -19,6 +19,23 @@ L.LineUtil.PolylineDecorator = {
         return dist;
     },
 
+    /**
+    * path: array of L.Point objects (pixel coordinates)
+    * Returns the length of the given path
+    */
+    getLength: function(path) {
+        var numPoints = path.length;
+        if (numPoints < 2) {
+            return 0;
+        }
+        var i, len = 0, pt, prevPt = path[0];
+        for (i = 1; i < numPoints; ++i) {
+            len += prevPt.distanceTo(pt = path[i]);
+            prevPt = pt;
+        }
+        return len;
+    },
+
     getPixelLength: function(pl, map) {
         var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl,
             nbPts = ll.length;
@@ -36,15 +53,13 @@ L.LineUtil.PolylineDecorator = {
 
     /**
     * path: array of L.LatLng
+    * pathAsPoints: array of L.Point
     * offsetRatio: the ratio of the total pixel length where the pattern will start
     * repeatRatio: the ratio of the total pixel length between two points of the pattern 
     * map: the map, to access the current projection state
     */
-    projectPatternOnPath: function (path, offsetRatio, repeatRatio, map) {
-        var pathAsPoints = [], i;
-        for(i=0, l=path.length; i<l; i++) {
-            pathAsPoints[i] = map.project(path[i]);
-        }
+    projectPatternOnPath: function (path, pathAsPoints, offsetRatio, repeatRatio, map) {
+        var i;
         // project the pattern as pixel points
         var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
         // and convert it to latlngs;
@@ -157,5 +172,67 @@ L.LineUtil.PolylineDecorator = {
         }
         // special case where points lie on the same vertical axis
         return new L.Point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
+    },
+
+    /**
+    * path: array of Point objects (pixel coordinates)
+    * bounds: pixel bounds
+    */
+    clipPath: function (path, bounds) {
+        var paths = [],
+            i,
+            pathBounds = new L.Bounds(path);
+        if (bounds.contains(pathBounds)) {
+            paths.push(path);
+        } else {
+            var distance = 0;
+            var p;
+            for (i = 0; i < (path.length - 1); ++i) {
+                var p1 = path[i];
+                var p2 = path[i + 1];
+                L.LineUtil.clipSegment(p1, p2, bounds);
+                var phase = 0;
+
+                if (p1 !== undefined && p2 !== undefined) {
+
+                    // Start new path
+                    if (p === undefined) {
+                        p = [];
+                        p.push(p1);
+                        p.push(p2);
+                    }
+
+                    // Continue existing path?
+                    else {
+
+                        // Add point to already started path
+                        if (p[p.length - 1].equals(p1)) {
+                            p.push(p2);
+                        }
+
+                        // End started path, and start a new path
+                        else {
+                            paths.push(p);
+                            p = [];
+                            p.push(p1);
+                            p.push(p2);
+                        }
+
+                    }
+
+                }
+
+                // Keep track of the distance to the current point
+                //distance += Point2D.distance(this.xpoints[i], this.ypoints[i], this.xpoints[i + 1], this.ypoints[i + 1]);
+
+            }
+
+            if (p !== undefined) {
+                paths.push(p);
+            }
+
+        }
+        return paths;
     }
+
 };
