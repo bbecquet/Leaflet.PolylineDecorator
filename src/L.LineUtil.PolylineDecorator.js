@@ -177,19 +177,25 @@ L.LineUtil.PolylineDecorator = {
     /**
     * path: array of Point objects (pixel coordinates)
     * bounds: pixel bounds
-    * Returns array of paths
+    * wavelength: the pixel wavelength for a pattern
+    * Returns array of paths, including information about pattern phase
     */
-    clipPath: function (path, bounds) {
+    clipPath: function (path, bounds, wavelength) {
         var pathBounds = L.bounds(path);
         if (bounds.contains(pathBounds)) {
-            return [path];
+            return [{
+                path: path,
+                phase: 0
+            }];
         }
 
         var paths = [],
             i,
+            distance = 0,
             p;
 
         for (i = 0; i < (path.length - 1); ++i) {
+            var phase = 0;
             // Assumes L.LineUtil.clipSegment return false if the line is
             // outside the bounds
             // Assumes that L.LineUtil.clipSegment does not modify p1/p2
@@ -200,28 +206,43 @@ L.LineUtil.PolylineDecorator = {
                 var p1 = clipped[0];
                 var p2 = clipped[1];
 
+                // Wavelength compensate
+                if (wavelength > 0) {
+                    var distInSegment = p1.distanceTo(path[i]);
+                    phase = (distance + distInSegment) % wavelength;
+                }
+
                 // Start new path
                 if (p === undefined) {
-                    p = [p1, p2];
+                    p = {
+                        path: [p1, p2],
+                        phase: phase
+                    };
                 }
 
                 // Continue existing path?
                 else {
 
                     // Add point to already started path
-                    if (p[p.length - 1].equals(p1)) {
-                        p.push(p2);
+                    if (p.path[p.path.length - 1].equals(p1)) {
+                        p.path.push(p2);
                     }
 
                     // End started path, and start a new path
                     else {
                         paths.push(p);
-                        p = [p1, p2];
+                        p = {
+                            path: [p1, p2],
+                            phase: phase
+                        };
                     }
 
                 }
 
             }
+
+            // Keep track of the distance to the current point
+            distance += path[i].distanceTo(path[i + 1]);
 
         }
 
