@@ -82,7 +82,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     setPatterns: function(patterns) {
         this.options.patterns = patterns;
         this._initPatterns();
-        this._softRedraw();
+        this.redraw();
     },
 
     /**
@@ -99,7 +99,6 @@ L.PolylineDecorator = L.LayerGroup.extend({
     */
     _parsePatternDef: function(patternDef, latLngs) {
         var pattern = {
-            cache: [],
             symbolFactory: patternDef.symbol,
             isOffsetInPixels: false,
             isRepeatInPixels: false
@@ -132,13 +131,13 @@ L.PolylineDecorator = L.LayerGroup.extend({
         this._draw();
         // listen to zoom changes to redraw pixel-spaced patterns
         if(this._isZoomDependant) {
-            this._map.on('zoomend', this._softRedraw, this);
+            this._map.on('moveend', this.redraw, this);
         }
     },
 
     onRemove: function (map) {
         // remove optional map zoom listener
-        this._map.off('zoomend', this._softRedraw, this);
+        this._map.off('moveend', this.redraw, this);
         this._map = null;
         L.LayerGroup.prototype.onRemove.call(this, map);
     },
@@ -152,15 +151,6 @@ L.PolylineDecorator = L.LayerGroup.extend({
             symbols.push(symbolFactory.buildSymbol(directionPoints[i], latLngs, this._map, i, l));
         }
         return symbols;
-    },
-
-    _getCache: function(pattern, zoom, pathIndex) {
-        var zoomCache = pattern.cache[zoom];
-        if(typeof zoomCache === 'undefined') {
-            pattern.cache[zoom] = [];
-            return null;
-        }
-        return zoomCache[pathIndex];
     },
 
     /**
@@ -203,30 +193,10 @@ L.PolylineDecorator = L.LayerGroup.extend({
         return dirPoints;
     },
 
-    /**
-    * Public redraw, invalidating the cache.
-    */
     redraw: function() {
-        this._redraw(true);
-    },
-    
-    /**
-    * "Soft" redraw, called internally for example on zoom changes,
-    * keeping the cache. 
-    */
-    _softRedraw: function() {
-        this._redraw(false);
-    },
-    
-    _redraw: function(clearCache) {
         if(this._map === null)
             return;
         this.clearLayers();
-        if(clearCache) {
-            for(var i=0; i<this._patterns.length; i++) {
-                this._patterns[i].cache = [];
-            }
-        }
         this._draw();
     },
     
