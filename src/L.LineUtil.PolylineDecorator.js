@@ -177,61 +177,58 @@ L.LineUtil.PolylineDecorator = {
     /**
     * path: array of Point objects (pixel coordinates)
     * bounds: pixel bounds
+    * Returns array of paths
     */
     clipPath: function (path, bounds) {
+        var pathBounds = L.bounds(path);
+        if (bounds.contains(pathBounds)) {
+            return [path];
+        }
+
         var paths = [],
             i,
-            pathBounds = new L.Bounds(path);
-        if (bounds.contains(pathBounds)) {
-            paths.push(path);
-        } else {
-            var distance = 0;
-            var p;
-            for (i = 0; i < (path.length - 1); ++i) {
-                var p1 = path[i].clone();
-                var p2 = path[i + 1].clone();
-                var phase = 0;
-                // Assumes L.LineUtil.clipSegment return false if the line is
-                // outside the bounds
-                if (L.LineUtil.clipSegment(p1, p2, bounds) !== false) {
+            p;
 
-                    // Start new path
-                    if (p === undefined) {
-                        p = [];
-                        p.push(p1);
+        for (i = 0; i < (path.length - 1); ++i) {
+            // Assumes L.LineUtil.clipSegment return false if the line is
+            // outside the bounds
+            // Assumes that L.LineUtil.clipSegment does not modify p1/p2
+            // directly
+            var clipped = L.LineUtil.clipSegment(path[i], path[i + 1], bounds);
+            if (clipped !== false) {
+
+                var p1 = clipped[0];
+                var p2 = clipped[1];
+
+                // Start new path
+                if (p === undefined) {
+                    p = [p1, p2];
+                }
+
+                // Continue existing path?
+                else {
+
+                    // Add point to already started path
+                    if (p[p.length - 1].equals(p1)) {
                         p.push(p2);
                     }
 
-                    // Continue existing path?
+                    // End started path, and start a new path
                     else {
-
-                        // Add point to already started path
-                        if (p[p.length - 1].equals(p1)) {
-                            p.push(p2);
-                        }
-
-                        // End started path, and start a new path
-                        else {
-                            paths.push(p);
-                            p = [];
-                            p.push(p1);
-                            p.push(p2);
-                        }
-
+                        paths.push(p);
+                        p = [p1, p2];
                     }
 
                 }
 
-                // Keep track of the distance to the current point
-                //distance += Point2D.distance(this.xpoints[i], this.ypoints[i], this.xpoints[i + 1], this.ypoints[i + 1]);
-
-            }
-
-            if (p !== undefined) {
-                paths.push(p);
             }
 
         }
+
+        if (p !== undefined) {
+            paths.push(p);
+        }
+
         return paths;
     }
 
