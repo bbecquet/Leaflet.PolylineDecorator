@@ -188,12 +188,12 @@ L.LineUtil.PolylineDecorator = {
             var distance = 0;
             var p;
             for (i = 0; i < (path.length - 1); ++i) {
-                var p1 = path[i];
-                var p2 = path[i + 1];
-                L.LineUtil.clipSegment(p1, p2, bounds);
+                var p1 = path[i].clone();
+                var p2 = path[i + 1].clone();
                 var phase = 0;
-
-                if (p1 !== undefined && p2 !== undefined) {
+                // Assumes L.LineUtil.clipSegment return false if the line is
+                // outside the bounds
+                if (L.LineUtil.clipSegment(p1, p2, bounds) !== false) {
 
                     // Start new path
                     if (p === undefined) {
