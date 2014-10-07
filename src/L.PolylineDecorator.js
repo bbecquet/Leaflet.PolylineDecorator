@@ -162,35 +162,68 @@ L.PolylineDecorator = L.LayerGroup.extend({
         var zoom = this._map.getZoom();
         var dirPoints = [];
 
-        var offset, repeat, pathPixelLength = null, latLngs = this._paths[pathIndex];
+        var pxLength = null,
+            latLngs = this._paths[pathIndex];
         var map = this._map;
 
-        var pxBounds = this._map.getPixelBounds();
+        var pxBounds = map.getPixelBounds();
+        // TODO: Buffer pxBounds to prevent large symbols being removed when
+        // rendered close to the border of the viewport. The user should maybe
+        // set the buffer?
         var pxPath = latLngs.map(function (latLng) {
             return map.project(latLng);
         });
 
         var clippedPxPaths = L.LineUtil.PolylineDecorator.clipPath(pxPath, pxBounds);
-        clippedPxPaths.forEach(function (path) {
-            if(pattern.isOffsetInPixels) {
-                pathPixelLength = L.LineUtil.PolylineDecorator.getLength(path);
-                offset = pattern.offset / pathPixelLength;
-            } else {
-                offset = pattern.offset;
+
+        if (clippedPxPaths.length > 0) {
+            pxLength = L.LineUtil.PolylineDecorator.getLength(pxPath);
+        }
+
+        clippedPxPaths.forEach(function (clipped) {
+            var offset, repeat,
+                clippedLength = L.LineUtil.PolylineDecorator.getLength(clipped.coords);
+
+            repeat = this._calcRepeat(pattern, pxLength, clippedLength);
+            offset = this._calcOffset(pattern, pxLength, clippedLength, clipped.offset, repeat * clippedLength);
+
+            if (offset <= 1) {
+                var coordsAsLatLngs = clipped.coords.map(function (p) {
+                    return map.unproject(p);
+                });
+                dirPoints = dirPoints.concat(L.LineUtil.PolylineDecorator.projectPatternOnPath(coordsAsLatLngs, clipped.coords, offset, repeat, map));
             }
-            if(pattern.isRepeatInPixels) {
-                pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getLength(path);
-                repeat = pattern.repeat/pathPixelLength; 
-            } else {
-                repeat = pattern.repeat;
-            }
-            var pathAsLatLngs = path.map(function (point) {
-                return map.unproject(point);
-            });
-            dirPoints = dirPoints.concat(L.LineUtil.PolylineDecorator.projectPatternOnPath(pathAsLatLngs, path, offset, repeat, map));
-        });
+
+        }, this);
 
         return dirPoints;
+    },
+
+    _calcOffset: function (pattern, pxLength, clippedLength, clippedOffset, pxRepeat) {
+        var pxOffset,
+            offset;
+        // Calc pattern offset in pixels
+        if (pattern.isOffsetInPixels) {
+            pxOffset = pattern.offset;
+        } else {
+            pxOffset = pattern.offset * pxLength;
+        }
+        // Calc pattern offset for the clipped path
+        if (clippedOffset <= pxOffset) {
+            offset = pxOffset - clippedOffset;
+        } else {
+            offset = Math.ceil((clippedOffset - pxOffset) / pxRepeat) * pxRepeat - (clippedOffset - pxOffset);
+        }
+        // Return pattern offset in percent
+        return offset / clippedLength;
+    },
+
+    _calcRepeat: function (pattern, pxLength, clippedLength) {
+        if(pattern.isRepeatInPixels) {
+            return pattern.repeat / clippedLength;
+        } else {
+            return pattern.repeat * pxLength / clippedLength;
+        }
     },
 
     redraw: function() {

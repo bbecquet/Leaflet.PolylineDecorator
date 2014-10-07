@@ -20,6 +20,7 @@ L.LineUtil.PolylineDecorator = {
     },
 
     /**
+    * Calculates the length of the given path
     * path: array of L.Point objects (pixel coordinates)
     * Returns the length of the given path
     */
@@ -175,17 +176,19 @@ L.LineUtil.PolylineDecorator = {
     },
 
     /**
+    * Returns the resulting paths when clipping the given path with the given
+    * bounds
     * path: array of Point objects (pixel coordinates)
     * bounds: pixel bounds
-    * wavelength: the pixel wavelength for a pattern
-    * Returns array of paths, including information about pattern phase
+    * Returns array of clipped paths. Each clipped path carries its offset
+    * from the beginning of the source path
     */
-    clipPath: function (path, bounds, wavelength) {
+    clipPath: function (path, bounds) {
         var pathBounds = L.bounds(path);
         if (bounds.contains(pathBounds)) {
             return [{
-                path: path,
-                phase: 0
+                coords: path,
+                offset: 0
             }];
         }
 
@@ -195,7 +198,6 @@ L.LineUtil.PolylineDecorator = {
             p;
 
         for (i = 0; i < (path.length - 1); ++i) {
-            var phase = 0;
             // Assumes L.LineUtil.clipSegment return false if the line is
             // outside the bounds
             // Assumes that L.LineUtil.clipSegment does not modify p1/p2
@@ -203,37 +205,32 @@ L.LineUtil.PolylineDecorator = {
             var clipped = L.LineUtil.clipSegment(path[i], path[i + 1], bounds);
             if (clipped !== false) {
 
-                var p1 = clipped[0];
-                var p2 = clipped[1];
-
-                // Wavelength compensate
-                if (wavelength > 0) {
-                    var distInSegment = p1.distanceTo(path[i]);
-                    phase = (distance + distInSegment) % wavelength;
-                }
+                var p1 = clipped[0],
+                    p2 = clipped[1],
+                    distInSegment = p1.distanceTo(path[i]);
 
                 // Start new path
                 if (p === undefined) {
                     p = {
-                        path: [p1, p2],
-                        phase: phase
+                        coords: [p1, p2],
+                        offset: distance + distInSegment
                     };
                 }
 
                 // Continue existing path?
                 else {
 
-                    // Add point to already started path
-                    if (p.path[p.path.length - 1].equals(p1)) {
-                        p.path.push(p2);
+                    // Add coordinate to already started path
+                    if (p.coords[p.coords.length - 1].equals(p1)) {
+                        p.coords.push(p2);
                     }
 
                     // End started path, and start a new path
                     else {
                         paths.push(p);
                         p = {
-                            path: [p1, p2],
-                            phase: phase
+                            coords: [p1, p2],
+                            offset: distance + distInSegment
                         };
                     }
 
