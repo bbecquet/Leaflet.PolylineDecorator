@@ -1,5 +1,5 @@
 {
-  "name": "Leaflet PolylineDecorator",
+  "name": "leaflet-polylinedecorator",
   "main": "leaflet.polylineDecorator.js",
   "version": "0.7.2",
   "authors": [
