@@ -48,8 +48,10 @@ L.LineUtil.PolylineDecorator = {
         // project the pattern as pixel points
         var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
         // and convert it to latlngs;
-        for(i=0, l=pattern.length; i<l; i++) {
-            pattern[i].latLng = map.unproject(pattern[i].pt);
+        for (i = 0, l = pattern.length; i < l; i++) {
+            if (pattern[i] != null) {
+                pattern[i].latLng = map.unproject(pattern[i].pt);
+            }
         }        
         return pattern;
     },
@@ -61,7 +63,7 @@ L.LineUtil.PolylineDecorator = {
         // 2. find the starting point by using the offsetRatio
         var previous = this.interpolateOnPointPath(pts, offsetRatio);
         positions.push(previous);
-        if(repeatRatio > 0) {
+        if(repeatRatio > 0 && previous != null) {
             // 3. consider only the rest of the path, starting at the previous point
             var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
@@ -550,10 +552,13 @@ L.PolylineDecorator = L.LayerGroup.extend({
         var directionPoints, symbols;
         for(var i=0; i < this._paths.length; i++) {
             directionPoints = this._getDirectionPoints(i, pattern);
-            symbols = this._buildSymbols(this._paths[i], pattern.symbolFactory, directionPoints);
-            for(var j=0; j < symbols.length; j++) {
-                this.addLayer(symbols[j]);
+            if (symbols[0] != null) {
+                symbols = this._buildSymbols(this._paths[i], pattern.symbolFactory, directionPoints);
+                for (var j = 0; j < symbols.length; j++) {
+                    this.addLayer(symbols[j]);
+                }
             }
+           
         }
     },
 
