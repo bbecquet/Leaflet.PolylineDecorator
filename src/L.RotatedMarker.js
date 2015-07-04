@@ -17,6 +17,9 @@ L.RotatedMarker = L.Marker.extend({
             this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' + 
                 costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';                
         }
+    },
+    setAngle: function (ang) {
+        this.options.angle = ang;
     }
 });
 
