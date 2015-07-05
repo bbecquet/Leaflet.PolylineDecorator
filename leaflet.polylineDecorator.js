@@ -178,12 +178,16 @@ L.RotatedMarker = L.Marker.extend({
             this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' + 
                 costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';                
         }
+    },
+    setAngle: function (ang) {
+        this.options.angle = ang;
     }
 });
 
 L.rotatedMarker = function (pos, options) {
     return new L.RotatedMarker(pos, options);
-};﻿/**
+};
+﻿/**
 * Defines several classes of symbol factories,
 * to be used with L.PolylineDecorator
 */
