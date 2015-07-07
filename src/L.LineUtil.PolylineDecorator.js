@@ -19,6 +19,24 @@ L.LineUtil.PolylineDecorator = {
         return dist;
     },
 
+    /**
+    * Calculates the length of the given path
+    * path: array of L.Point objects (pixel coordinates)
+    * Returns the length of the given path
+    */
+    getLength: function(path) {
+        var numPoints = path.length;
+        if (numPoints < 2) {
+            return 0;
+        }
+        var i, len = 0, pt, prevPt = path[0];
+        for (i = 1; i < numPoints; ++i) {
+            len += prevPt.distanceTo(pt = path[i]);
+            prevPt = pt;
+        }
+        return len;
+    },
+
     getPixelLength: function(pl, map) {
         var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl,
             nbPts = ll.length;
@@ -36,15 +54,13 @@ L.LineUtil.PolylineDecorator = {
 
     /**
     * path: array of L.LatLng
+    * pathAsPoints: array of L.Point
     * offsetRatio: the ratio of the total pixel length where the pattern will start
     * repeatRatio: the ratio of the total pixel length between two points of the pattern 
     * map: the map, to access the current projection state
     */
-    projectPatternOnPath: function (path, offsetRatio, repeatRatio, map) {
-        var pathAsPoints = [], i;
-        for(i=0, l=path.length; i<l; i++) {
-            pathAsPoints[i] = map.project(path[i]);
-        }
+    projectPatternOnPath: function (path, pathAsPoints, offsetRatio, repeatRatio, map) {
+        var i;
         // project the pattern as pixel points
         var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, repeatRatio);
         // and convert it to latlngs;
@@ -157,5 +173,81 @@ L.LineUtil.PolylineDecorator = {
         }
         // special case where points lie on the same vertical axis
         return new L.Point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
+    },
+
+    /**
+    * Returns the resulting paths when clipping the given path with the given
+    * bounds
+    * path: array of Point objects (pixel coordinates)
+    * bounds: pixel bounds
+    * Returns array of clipped paths. Each clipped path carries its offset
+    * from the beginning of the source path
+    */
+    clipPath: function (path, bounds) {
+        var pathBounds = L.bounds(path);
+        if (bounds.contains(pathBounds)) {
+            return [{
+                coords: path,
+                offset: 0
+            }];
+        }
+
+        var paths = [],
+            i,
+            distance = 0,
+            p;
+
+        for (i = 0; i < (path.length - 1); ++i) {
+            // Assumes L.LineUtil.clipSegment return false if the line is
+            // outside the bounds
+            // Assumes that L.LineUtil.clipSegment does not modify p1/p2
+            // directly
+            var clipped = L.LineUtil.clipSegment(path[i], path[i + 1], bounds);
+            if (clipped !== false) {
+
+                var p1 = clipped[0],
+                    p2 = clipped[1],
+                    distInSegment = p1.distanceTo(path[i]);
+
+                // Start new path
+                if (p === undefined) {
+                    p = {
+                        coords: [p1, p2],
+                        offset: distance + distInSegment
+                    };
+                }
+
+                // Continue existing path?
+                else {
+
+                    // Add coordinate to already started path
+                    if (p.coords[p.coords.length - 1].equals(p1)) {
+                        p.coords.push(p2);
+                    }
+
+                    // End started path, and start a new path
+                    else {
+                        paths.push(p);
+                        p = {
+                            coords: [p1, p2],
+                            offset: distance + distInSegment
+                        };
+                    }
+
+                }
+
+            }
+
+            // Keep track of the distance to the current point
+            distance += path[i].distanceTo(path[i + 1]);
+
+        }
+
+        if (p !== undefined) {
+            paths.push(p);
+        }
+
+        return paths;
     }
+
 };
