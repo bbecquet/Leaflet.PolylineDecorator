@@ -83,5 +83,14 @@ function init() {
             {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0}})}
         ]
     }).addTo(map);
+	
+	// --- Gradiented Polyline ---    
+	var gradientPathPattern = L.polylineDecorator(
+		[ [ 51.5363456, -12.2562345 ], [ 51.1418574, -12.7234534 ], [ 52.723453, -13.123454 ], [ 52.87456, -14.234587 ], [ 52.2345785, -15.28655 ], [ 52.6765334, -15.876443 ], [ 52.8743456, -16.2479655 ], [ 51.2342378, -15.87456 ], [ 51.4568, -15.75735 ], [ 51.924562, -14.254 ] ],
+		{
+			patterns: [
+				{ offset: 0, repeat: 1, symbol: L.Symbol.gradientDash({pixelSize: 2, pathOptions: {color: '#f00', weight: 3}}) }
+			]
+		}
+	).addTo(map);
 }
-
