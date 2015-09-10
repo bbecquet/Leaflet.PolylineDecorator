@@ -1,0 +1,9 @@
+{
+  "name": "leaflet-polylinedecorator",
+  "repository": "bbecquet/Leaflet.PolylineDecorator",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0"
+  },
+  "license": "MIT"
+}
