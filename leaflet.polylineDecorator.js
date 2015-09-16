@@ -284,11 +284,11 @@ L.PolylineDecorator = L.LayerGroup.extend({
             pattern.isOffsetInPixels = (pattern.offset > 0);
         }
 
-        if(typeof patternDef.endoffset === 'string' && patternDef.endoffset.indexOf('%') != -1) {
-            pattern.endoffset = parseFloat(patternDef.endoffset) / 100;
+        if(typeof patternDef.endOffset === 'string' && patternDef.endOffset.indexOf('%') != -1) {
+            pattern.endOffset = parseFloat(patternDef.endOffset) / 100;
         } else {
-            pattern.endoffset = parseFloat(patternDef.endoffset);
-            pattern.isEndOffsetInPixels = (pattern.endoffset > 0);
+            pattern.endOffset = parseFloat(patternDef.endOffset);
+            pattern.isEndOffsetInPixels = (pattern.endOffset > 0);
         }
         
         
@@ -352,7 +352,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
             return dirPoints;
         }
 
-        var offset, endoffset, repeat, pathPixelLength = null, latLngs = this._paths[pathIndex];
+        var offset, endOffset, repeat, pathPixelLength = null, latLngs = this._paths[pathIndex];
         if(pattern.isOffsetInPixels) {
             pathPixelLength =  L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
@@ -361,9 +361,9 @@ L.PolylineDecorator = L.LayerGroup.extend({
         }
         if(pattern.isEndOffsetInPixels) {
             pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
-            endoffset = pattern.endoffset/pathPixelLength;
+            endOffset = pattern.endOffset/pathPixelLength;
         } else {
-            endoffset = pattern.endoffset;
+            endOffset = pattern.endOffset;
         }
         if(pattern.isRepeatInPixels) {
             pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
@@ -371,7 +371,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(latLngs, offset, endoffset, repeat, this._map);
+        dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
         // save in cache to avoid recomputing this
         pattern.cache[zoom][pathIndex] = dirPoints;
         
