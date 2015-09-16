@@ -62,7 +62,7 @@ L.LineUtil.PolylineDecorator = {
         var repeatIntervalLength = this.getPointPathPixelLength(pts) * repeatRatio;
         // 2. find the starting point by using the offsetRatio and find the last pixel using endOffsetRatio
         var previous = this.interpolateOnPointPath(pts, offsetRatio);
-        var endOffsetPixels = this.getPointPathPixelLength(pts) * endOffsetRatio;
+        var endOffsetPixels = endOffsetRatio > 0 ? this.getPointPathPixelLength(pts) * endOffsetRatio : 0;
         
         positions.push(previous);
         if(repeatRatio > 0) {
