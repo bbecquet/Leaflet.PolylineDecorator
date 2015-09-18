@@ -15,7 +15,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     /**
     * Deals with all the different cases. p can be one of these types:
     * array of LatLng, array of 2-number arrays, Polyline, Polygon,
-    * array of one of the previous. 
+    * array of one of the previous.
     */
     _initPaths: function(p) {
         this._paths = [];
@@ -35,7 +35,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
 
     _isCoordArray: function(ll) {
         return(L.Util.isArray(ll) && ll.length > 0 && (
-            ll[0] instanceof L.LatLng || 
+            ll[0] instanceof L.LatLng ||
             (L.Util.isArray(ll[0]) && ll[0].length == 2 && typeof ll[0][0] === 'number')
         ));
     },
@@ -57,7 +57,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
             }
             this._paths.push(latLngs[i]);
         }
-    },   
+    },
 
     _initPatterns: function() {
         this._isZoomDependant = false;
@@ -77,7 +77,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     },
 
     /**
-    * Changes the patterns used by this decorator 
+    * Changes the patterns used by this decorator
     * and redraws the new one.
     */
     setPatterns: function(patterns) {
@@ -87,7 +87,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     },
 
     /**
-    * Changes the patterns used by this decorator 
+    * Changes the patterns used by this decorator
     * and redraws the new one.
     */
     setPaths: function(paths) {
@@ -106,33 +106,30 @@ L.PolylineDecorator = L.LayerGroup.extend({
             isEndOffsetInPixels: false,
             isRepeatInPixels: false
         };
-        
+
         // Parse offset and repeat values, managing the two cases:
         // absolute (in pixels) or relative (in percentage of the polyline length)
         if(typeof patternDef.offset === 'string' && patternDef.offset.indexOf('%') != -1) {
             pattern.offset = parseFloat(patternDef.offset) / 100;
         } else {
-            pattern.offset = parseFloat(patternDef.offset);
+            pattern.offset = patternDef.offset ? parseFloat(patternDef.offset) : 0;
             pattern.isOffsetInPixels = (pattern.offset > 0);
         }
 
         if(typeof patternDef.endOffset === 'string' && patternDef.endOffset.indexOf('%') != -1) {
             pattern.endOffset = parseFloat(patternDef.endOffset) / 100;
         } else {
-            pattern.endOffset = parseFloat(patternDef.endOffset);
+            pattern.endOffset = patternDef.endOffset ? parseFloat(patternDef.endOffset) : 0;
             pattern.isEndOffsetInPixels = (pattern.endOffset > 0);
         }
-        
-        
+
         if(typeof patternDef.repeat === 'string' && patternDef.repeat.indexOf('%') != -1) {
             pattern.repeat = parseFloat(patternDef.repeat) / 100;
         } else {
             pattern.repeat = parseFloat(patternDef.repeat);
             pattern.isRepeatInPixels = (pattern.repeat > 0);
         }
-        
-        // TODO: 0 => not pixel dependant => 0%
-        
+
         return(pattern);
     },
 
@@ -175,7 +172,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
     /**
     * Select pairs of LatLng and heading angle,
     * that define positions and directions of the symbols
-    * on the path 
+    * on the path
     */
     _getDirectionPoints: function(pathIndex, pattern) {
         var zoom = this._map.getZoom();
@@ -199,14 +196,14 @@ L.PolylineDecorator = L.LayerGroup.extend({
         }
         if(pattern.isRepeatInPixels) {
             pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
-            repeat = pattern.repeat/pathPixelLength; 
+            repeat = pattern.repeat/pathPixelLength;
         } else {
             repeat = pattern.repeat;
         }
         dirPoints = L.LineUtil.PolylineDecorator.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
         // save in cache to avoid recomputing this
         pattern.cache[zoom][pathIndex] = dirPoints;
-        
+
         return dirPoints;
     },
 
@@ -216,15 +213,15 @@ L.PolylineDecorator = L.LayerGroup.extend({
     redraw: function() {
         this._redraw(true);
     },
-    
+
     /**
     * "Soft" redraw, called internally for example on zoom changes,
-    * keeping the cache. 
+    * keeping the cache.
     */
     _softRedraw: function() {
         this._redraw(false);
     },
-    
+
     _redraw: function(clearCache) {
         if(this._map === null)
             return;
@@ -236,7 +233,7 @@ L.PolylineDecorator = L.LayerGroup.extend({
         }
         this._draw();
     },
-    
+
     /**
     * Draw a single pattern
     */
