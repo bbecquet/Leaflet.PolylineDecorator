@@ -23,20 +23,16 @@ For a version of the plugin compatible with the 0.7.x Leaflet release, use the `
 
 To create a decorator and add it to the map: `L.polylineDecorator(latlngs, options).addTo(map);`
 
-### `latlngs`
-
-Can be one of the following types:
+* `latlngs` can be one of the following types:
 
  * `L.Polyline`
  * `L.Polygon`
- * an array of `L.LatLng`, or with Leaflet's simplified syntax, an array of 2-cells arrays of coordinates
+ * an array of `L.LatLng`, or with Leaflet's simplified syntax, an array of 2-cells arrays of coordinates (useful if you just want to draw patterns following coordinates, but not the line itself)
  * an array of any of these previous types, to apply the same patterns to multiple lines
 
-Passing coordinate arrays instead of polyline/polygon objects is useful if you just want to draw patterns following coordinates, but not the line itself.
+* `options` has a single property `patterns`, which is an array of `Pattern` objects.
 
-### `options`
-
-Has a single property `patterns`, which is an array of pattern definitions, each defined by the following properties:
+### `Pattern` definition
 
 Property | Type | Required | Description
 --- | --- | --- | ---
@@ -45,7 +41,14 @@ Property | Type | Required | Description
 `repeat`| *see below* | Yes | Repetition interval of the pattern symbols. Defines the distance between each consecutive symbol's anchor point.
 `symbol`| Symbol factory | Yes | Instance of a symbol factory class.
 
-`offset`, `endOffset` and `repeat` can be each defined as a number, in pixels, or in percentage of the line's length, as a string (ex: `'10%'`);
+`offset`, `endOffset` and `repeat` can be each defined as a number, in pixels, or in percentage of the line's length, as a string (ex: `'10%'`).
+
+### Methods
+
+Method | Description
+--- | ---
+`setPaths(latlngs)` | Changes the path(s) the decorator applies to. `latlngs` can be all the types supported by the constructor. Useful for example if you remove polyline from a set, or coordinates change.
+`setPatterns(<Pattern[]> patterns)` | Changes the decorator's pattern definitions, and update the symbols accordingly.
 
 ## Example
 
@@ -53,7 +56,7 @@ Property | Type | Required | Description
 var polyline = L.polyline([...]).addTo(map);
 var decorator = L.polylineDecorator(polyline, {
     patterns: [
-        // define a pattern of 10px-wide dashes, repeated every 20px on the line 
+        // defines a pattern of 10px-wide dashes, repeated every 20px on the line
         {offset: 0, repeat: 20, symbol: L.Symbol.dash({pixelSize: 10})}
     ]
 }).addTo(map);
