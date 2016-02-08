@@ -1,0 +1,8 @@
+{
+  "name": "leaflet-polylinedecorator",
+  "description": "A plug-in for the Leaflet map library to define patterns (like dashes, arrows, icons, etc.) on Polylines",
+  "keywords": ["leaflet", "map", "polyline", "decorator", "patterns", "overlay"],
+  "version": "0.7.2",
+  "repository": "bbecquet/Leaflet.PolylineDecorator",
+  "license": "MIT"
+}
