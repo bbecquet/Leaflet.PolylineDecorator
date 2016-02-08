@@ -1,7 +1,8 @@
 {
   "name": "leaflet-polylinedecorator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": "bbecquet/Leaflet.PolylineDecorator",
+  "main": "leaflet.polylineDecorator.js",
   "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0"
