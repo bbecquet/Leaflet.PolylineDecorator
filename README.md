@@ -8,6 +8,16 @@ The development version of the plugin (on the `master` branch) is targeted at th
 
 For a version of the plugin compatible with the 0.7.x Leaflet release, use the `leaflet-0.7.2` branch.
 
+## npm / bower
+
+```
+npm install leaflet-polylinedecorator
+```
+
+```
+bower install leaflet-polylinedecorator
+```
+
 ## Features
 
 * Dashed or dotted lines, arrow heads, markers following line
