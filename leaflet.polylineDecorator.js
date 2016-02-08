@@ -598,7 +598,7 @@ L.Symbol.Marker = L.Class.extend({
             return new L.Marker(directionPoint.latLng, this.options.markerOptions);
         }
         else {
-            this.options.markerOptions.angle = directionPoint.heading;
+            this.options.markerOptions.angle = directionPoint.heading + (this.options.angleCorrection || 0);
             return new L.RotatedMarker(directionPoint.latLng, this.options.markerOptions);
         }
     }
