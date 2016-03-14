@@ -11,7 +11,17 @@ L.RotatedMarker = L.Marker.extend({
     _initIcon: function() {
         L.Marker.prototype._initIcon.call(this);
 
-        this._icon.style[L.RotatedMarker.TRANSFORM_ORIGIN] = '50% 50%';
+        this._icon.style[L.RotatedMarker.TRANSFORM_ORIGIN] = this._getTransformOrigin();
+    },
+
+    _getTransformOrigin: function() {
+        var iconAnchor = this.options.icon.options.iconAnchor;
+
+        if (!iconAnchor) {
+            return '50% 50%';
+        }
+
+        return iconAnchor[0] + 'px ' + iconAnchor[1] + 'px';
     },
 
     _setPos: function (pos) {
