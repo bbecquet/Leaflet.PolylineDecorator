@@ -167,13 +167,13 @@ L.LineUtil.PolylineDecorator = {
     }
 };
 
-L.PolylineDecorator = L.LayerGroup.extend({
+L.PolylineDecorator = L.FeatureGroup.extend({
     options: {
         patterns: []
     },
 
     initialize: function(paths, options) {
-        L.LayerGroup.prototype.initialize.call(this);
+        L.FeatureGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
         this._map = null;
         this._initPaths(paths);
