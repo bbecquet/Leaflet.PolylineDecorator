@@ -1,5 +1,8 @@
 
 L.PolylineDecorator = L.LayerGroup.extend({
+    
+    includes: [L.Mixin.Events],
+    
     options: {
         patterns: []
     },
@@ -249,6 +252,17 @@ L.PolylineDecorator = L.LayerGroup.extend({
             this._drawPattern(this._patterns[i]);
         }
     }
+    
+    getBounds: function () {
+		var bounds = new L.LatLngBounds();
+
+		this.eachLayer(function (layer) {
+			bounds.extend(layer instanceof L.Marker ? layer.getLatLng() : layer.getBounds());
+		});
+
+		return bounds;
+	},
+    
 });
 /*
  * Allows compact syntax to be used
