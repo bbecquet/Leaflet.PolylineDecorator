@@ -4,7 +4,7 @@ var gulp = require('gulp'),
 gulp.task('concat', function(){
   return gulp.src('src/*.js')
     .pipe(concat('leaflet.polylineDecorator.js'))
-    .pipe(gulp.dest('.'));
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('default', ['concat']);

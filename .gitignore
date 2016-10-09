@@ -1,5 +1,1 @@
-*.sh
-*.ps1
-*~
-*.sublime-*
 node_modules
