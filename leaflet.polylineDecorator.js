@@ -270,6 +270,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         var pattern = {
             cache: [],
             symbolFactory: patternDef.symbol,
+            symbolOffset: patternDef.symbolOffset,
             isOffsetInPixels: false,
             isEndOffsetInPixels: false,
             isRepeatInPixels: false
@@ -349,7 +350,20 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             return dirPoints;
         }
 
-        var offset, endOffset, repeat, pathPixelLength = null, latLngs = this._paths[pathIndex];
+        var offset, endOffset, repeat, latLngs, pathPixelLength = null;
+        if (pattern.symbolOffset) {
+          latLngs = [];
+          for (var i = 0; i < this._paths[pathIndex].length; i++) {
+            latLngs[i] = this._map.latLngToLayerPoint(this._paths[pathIndex][i]);
+          }
+          latLngs = L.PolylineOffset.offsetPoints(latLngs, pattern.symbolOffset);
+          for (var i = 0; i < latLngs.length; i++) {
+            latLngs[i] = this._map.layerPointToLatLng(latLngs[i]);
+          }
+        } else {
+          latLngs = this._paths[pathIndex];
+        }
+
         if(pattern.isOffsetInPixels) {
             pathPixelLength =  L.LineUtil.PolylineDecorator.getPixelLength(latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
