@@ -1,5 +1,5 @@
 
-L.LineUtil.PolylineDecorator = {
+L.PolylineDecoratorUtil = {
     computeAngle: function(a, b) {
         return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
     },
@@ -15,7 +15,7 @@ L.LineUtil.PolylineDecorator = {
         for(var i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = pts[i]);
             prevPt = pt;
-        } 
+        }
         return dist;
     },
 
@@ -26,11 +26,11 @@ L.LineUtil.PolylineDecorator = {
             return 0;
         }
         var dist = 0,
-            prevPt = map.project(ll[0]), pt; 
+            prevPt = map.project(ll[0]), pt;
         for(var i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = map.project(ll[i]));
             prevPt = pt;
-        } 
+        }
         return dist;
     },
 
@@ -38,7 +38,7 @@ L.LineUtil.PolylineDecorator = {
     * path: array of L.LatLng
     * offsetRatio: the ratio of the total pixel length where the pattern will start
     * endOffsetRatio: the ratio of the total pixel length where the pattern will end
-    * repeatRatio: the ratio of the total pixel length between two points of the pattern 
+    * repeatRatio: the ratio of the total pixel length between two points of the pattern
     * map: the map, to access the current projection state
     */
     projectPatternOnPath: function (path, offsetRatio, endOffsetRatio, repeatRatio, map) {
@@ -52,10 +52,10 @@ L.LineUtil.PolylineDecorator = {
         // and convert it to latlngs;
         for(i=0, l=pattern.length; i<l; i++) {
             pattern[i].latLng = map.unproject(pattern[i].pt);
-        }        
+        }
         return pattern;
     },
-    
+
     projectPatternOnPointPath: function (pts, offsetRatio, endOffsetRatio, repeatRatio) {
         var positions = [];
         // 1. compute the absolute interval length in pixels
@@ -63,16 +63,16 @@ L.LineUtil.PolylineDecorator = {
         // 2. find the starting point by using the offsetRatio and find the last pixel using endOffsetRatio
         var previous = this.interpolateOnPointPath(pts, offsetRatio);
         var endOffsetPixels = endOffsetRatio > 0 ? this.getPointPathPixelLength(pts) * endOffsetRatio : 0;
-        
+
         positions.push(previous);
         if(repeatRatio > 0) {
             // 3. consider only the rest of the path, starting at the previous point
             var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
-            
+
             remainingPath[0] = previous.pt;
             var remainingLength = this.getPointPathPixelLength(remainingPath);
-            
+
             // 4. project as a ratio of the remaining length,
             // and repeat while there is room for another point of the pattern
 
@@ -125,13 +125,13 @@ L.LineUtil.PolylineDecorator = {
                 heading: this.computeAngle(pts[0], pts[1])
             };
         }
-            
+
         var pathLength = this.getPointPathPixelLength(pts);
         var a = pts[0], b = a,
             ratioA = 0, ratioB = 0,
             distB = 0;
         // follow the path segments until we find the one
-        // on which the point must lie => [ab] 
+        // on which the point must lie => [ab]
         var i = 1;
         for (; i < nbVertices && ratioB < ratio; i++) {
             a = b;
@@ -150,10 +150,10 @@ L.LineUtil.PolylineDecorator = {
             heading: this.computeAngle(a, b)
         };
     },
-    
+
     /**
     * Finds the point which lies on the segment defined by points A and B,
-    * at the given ratio of the distance from A to B, by linear interpolation. 
+    * at the given ratio of the distance from A to B, by linear interpolation.
     */
     interpolateBetweenPoints: function (ptA, ptB, ratio) {
         if(ptB.x != ptA.x) {
