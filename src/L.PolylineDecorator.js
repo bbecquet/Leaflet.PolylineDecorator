@@ -181,7 +181,12 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             return dirPoints;
         }
 
-        var offset, endOffset, repeat, pathPixelLength = null, latLngs = this._paths[pathIndex];
+        var latLngs = this._paths[pathIndex];
+        if (latLngs.length < 2) {
+            return [];
+        }
+        var offset, endOffset, repeat, pathPixelLength = null;
+
         if(pattern.isOffsetInPixels) {
             pathPixelLength =  L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
