@@ -1,5 +1,4 @@
 import './L.PolylineDecoratorUtil.js';
-import './L.RotatedMarker.js';
 import './L.Symbol.js';
 
 L.PolylineDecorator = L.FeatureGroup.extend({
