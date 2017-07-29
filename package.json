@@ -5,10 +5,12 @@
   "main": "./dist/leaflet.polylineDecorator.js",
   "scripts": {
     "build": "rollup -c",
+    "build:watch": "rollup -c -w",
     "prepublish": "gulp"
   },
   "devDependencies": {
-    "rollup": "^0.45.2"
+    "rollup": "^0.45.2",
+    "rollup-watch": "^4.3.1"
   },
   "license": "MIT"
 }
