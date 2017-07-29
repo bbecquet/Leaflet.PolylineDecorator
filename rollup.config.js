@@ -4,7 +4,7 @@ import babel from 'rollup-plugin-babel';
 export default {
   entry: 'src/L.PolylineDecorator.js',
   dest: 'dist/leaflet.polylineDecorator.js',
-  format: 'es',
+  format: 'umd',
   plugins: [
     resolve(),
     babel({
