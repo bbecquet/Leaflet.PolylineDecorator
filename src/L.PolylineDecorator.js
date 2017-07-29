@@ -234,14 +234,13 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     /**
-    * Draw a single pattern
+    * Returns all symbols for a given pattern as an array of LayerGroup
     */
-    _drawPattern: function(pattern) {
+    _getPatternLayers: function(pattern) {
         let directionPoints, symbols;
-        this._paths.forEach((path, i) => {
+        return this._paths.map((path, i) => {
             directionPoints = this._getDirectionPoints(i, pattern);
-            symbols = this._buildSymbols(path, pattern.symbolFactory, directionPoints);
-            symbols.forEach(symbol => { this.addLayer(symbol); });
+            return L.layerGroup(this._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },
 
@@ -249,7 +248,10 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Draw all patterns
     */
     _draw: function () {
-        this._patterns.forEach(pattern => { this._drawPattern(pattern); });
+        this._patterns.forEach(pattern => {
+            const layers = this._getPatternLayers(pattern);
+            this.addLayer(L.layerGroup(layers));
+        });
     }
 });
 /*
