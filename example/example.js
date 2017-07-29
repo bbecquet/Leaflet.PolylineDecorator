@@ -1,6 +1,6 @@
 ﻿
 function init() {
-    var map = new L.Map('map', {
+    var map = L.map('map', {
         center: [52.0, -11.0],
         zoom: 5,
         layers: [

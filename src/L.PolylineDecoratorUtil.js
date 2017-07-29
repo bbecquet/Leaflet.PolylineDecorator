@@ -153,12 +153,12 @@ L.PolylineDecoratorUtil = {
     */
     interpolateBetweenPoints: function (ptA, ptB, ratio) {
         if(ptB.x != ptA.x) {
-            return new L.Point(
+            return L.point(
                 (ptA.x * (1 - ratio)) + (ratio * ptB.x),
                 (ptA.y * (1 - ratio)) + (ratio * ptB.y)
             );
         }
         // special case where points lie on the same vertical axis
-        return new L.Point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
+        return L.point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
     }
 };

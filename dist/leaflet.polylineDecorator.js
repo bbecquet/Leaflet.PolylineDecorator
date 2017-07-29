@@ -159,10 +159,10 @@ L.PolylineDecoratorUtil = {
     */
     interpolateBetweenPoints: function interpolateBetweenPoints(ptA, ptB, ratio) {
         if (ptB.x != ptA.x) {
-            return new L.Point(ptA.x * (1 - ratio) + ratio * ptB.x, ptA.y * (1 - ratio) + ratio * ptB.y);
+            return L.point(ptA.x * (1 - ratio) + ratio * ptB.x, ptA.y * (1 - ratio) + ratio * ptB.y);
         }
         // special case where points lie on the same vertical axis
-        return new L.Point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
+        return L.point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
     }
 };
 
@@ -250,15 +250,15 @@ L.Symbol.Dash = L.Class.extend({
 
         // for a dot, nothing more to compute
         if (opts.pixelSize <= 1) {
-            return new L.Polyline([dirPoint.latLng, dirPoint.latLng], opts.pathOptions);
+            return L.polyline([dirPoint.latLng, dirPoint.latLng], opts.pathOptions);
         }
 
         var midPoint = map.project(dirPoint.latLng);
         var angle = -(dirPoint.heading - 90) * d2r;
-        var a = new L.Point(midPoint.x + opts.pixelSize * Math.cos(angle + Math.PI) / 2, midPoint.y + opts.pixelSize * Math.sin(angle) / 2);
+        var a = L.point(midPoint.x + opts.pixelSize * Math.cos(angle + Math.PI) / 2, midPoint.y + opts.pixelSize * Math.sin(angle) / 2);
         // compute second point by central symmetry to avoid unecessary cos/sin
         var b = midPoint.add(midPoint.subtract(a));
-        return new L.Polyline([map.unproject(a), map.unproject(b)], opts.pathOptions);
+        return L.polyline([map.unproject(a), map.unproject(b)], opts.pathOptions);
     }
 });
 
@@ -288,9 +288,9 @@ L.Symbol.ArrowHead = L.Class.extend({
         var opts = this.options;
         var path;
         if (opts.polygon) {
-            path = new L.Polygon(this._buildArrowPath(dirPoint, map), opts.pathOptions);
+            path = L.polygon(this._buildArrowPath(dirPoint, map), opts.pathOptions);
         } else {
-            path = new L.Polyline(this._buildArrowPath(dirPoint, map), opts.pathOptions);
+            path = L.polyline(this._buildArrowPath(dirPoint, map), opts.pathOptions);
         }
         return path;
     },
@@ -303,8 +303,8 @@ L.Symbol.ArrowHead = L.Class.extend({
 
         var headAngle1 = direction + radianArrowAngle,
             headAngle2 = direction - radianArrowAngle;
-        var arrowHead1 = new L.Point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle1), tipPoint.y + this.options.pixelSize * Math.sin(headAngle1)),
-            arrowHead2 = new L.Point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle2), tipPoint.y + this.options.pixelSize * Math.sin(headAngle2));
+        var arrowHead1 = L.point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle1), tipPoint.y + this.options.pixelSize * Math.sin(headAngle1)),
+            arrowHead2 = L.point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle2), tipPoint.y + this.options.pixelSize * Math.sin(headAngle2));
 
         return [map.unproject(arrowHead1), dirPoint.latLng, map.unproject(arrowHead2)];
     }
@@ -333,7 +333,7 @@ L.Symbol.Marker = L.Class.extend({
         if (this.options.rotate) {
             this.options.markerOptions.rotationAngle = directionPoint.heading + (this.options.angleCorrection || 0);
         }
-        return new L.Marker(directionPoint.latLng, this.options.markerOptions);
+        return L.marker(directionPoint.latLng, this.options.markerOptions);
     }
 });
 
