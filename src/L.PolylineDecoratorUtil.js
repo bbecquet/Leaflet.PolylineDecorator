@@ -5,14 +5,14 @@ L.PolylineDecoratorUtil = {
     },
 
     getPointPathPixelLength: function(pts) {
-        var nbPts = pts.length;
-        if(nbPts < 2) {
+        const nbPts = pts.length;
+        if (nbPts < 2) {
             return 0;
         }
-        var dist = 0,
-            prevPt = pts[0],
-            pt;
-        for(var i=1; i<nbPts; i++) {
+        let dist = 0;
+        let prevPt = pts[0];
+        let pt;
+        for (let i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = pts[i]);
             prevPt = pt;
         }
@@ -20,14 +20,14 @@ L.PolylineDecoratorUtil = {
     },
 
     getPixelLength: function(pl, map) {
-        var ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl,
-            nbPts = ll.length;
-        if(nbPts < 2) {
+        const ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl;
+        const nbPts = ll.length;
+        if (nbPts < 2) {
             return 0;
         }
-        var dist = 0,
-            prevPt = map.project(ll[0]), pt;
-        for(var i=1; i<nbPts; i++) {
+        let dist = 0;
+        let prevPt = map.project(ll[0]), pt;
+        for (let i=1; i<nbPts; i++) {
             dist += prevPt.distanceTo(pt = map.project(ll[i]));
             prevPt = pt;
         }
@@ -53,26 +53,26 @@ L.PolylineDecoratorUtil = {
     },
 
     projectPatternOnPointPath: function (pts, offsetRatio, endOffsetRatio, repeatRatio) {
-        var positions = [];
+        const positions = [];
         // 1. compute the absolute interval length in pixels
-        var repeatIntervalLength = this.getPointPathPixelLength(pts) * repeatRatio;
+        const repeatIntervalLength = this.getPointPathPixelLength(pts) * repeatRatio;
         // 2. find the starting point by using the offsetRatio and find the last pixel using endOffsetRatio
-        var previous = this.interpolateOnPointPath(pts, offsetRatio);
-        var endOffsetPixels = endOffsetRatio > 0 ? this.getPointPathPixelLength(pts) * endOffsetRatio : 0;
+        let previous = this.interpolateOnPointPath(pts, offsetRatio);
+        const endOffsetPixels = endOffsetRatio > 0 ? this.getPointPathPixelLength(pts) * endOffsetRatio : 0;
 
         positions.push(previous);
-        if(repeatRatio > 0) {
+        if (repeatRatio > 0) {
             // 3. consider only the rest of the path, starting at the previous point
-            var remainingPath = pts;
+            let remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
 
             remainingPath[0] = previous.pt;
-            var remainingLength = this.getPointPathPixelLength(remainingPath);
+            let remainingLength = this.getPointPathPixelLength(remainingPath);
 
             // 4. project as a ratio of the remaining length,
             // and repeat while there is room for another point of the pattern
 
-            while(repeatIntervalLength <= remainingLength-endOffsetPixels) {
+            while (repeatIntervalLength <= remainingLength-endOffsetPixels) {
                 previous = this.interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
                 positions.push(previous);
                 remainingPath = remainingPath.slice(previous.predecessor);
@@ -92,7 +92,7 @@ L.PolylineDecoratorUtil = {
     *    heading: the heading of the path at this point, in degrees
     */
     interpolateOnPointPath: function (pts, ratio) {
-        var nbVertices = pts.length;
+        const nbVertices = pts.length;
 
         if (nbVertices < 2) {
             return null;
@@ -122,13 +122,13 @@ L.PolylineDecoratorUtil = {
             };
         }
 
-        var pathLength = this.getPointPathPixelLength(pts);
-        var a = pts[0], b = a,
+        const pathLength = this.getPointPathPixelLength(pts);
+        let a = pts[0], b = a,
             ratioA = 0, ratioB = 0,
             distB = 0;
         // follow the path segments until we find the one
         // on which the point must lie => [ab]
-        var i = 1;
+        let i = 1;
         for (; i < nbVertices && ratioB < ratio; i++) {
             a = b;
             ratioA = ratioB;
@@ -138,7 +138,7 @@ L.PolylineDecoratorUtil = {
         }
 
         // compute the ratio relative to the segment [ab]
-        var segmentRatio = (ratio - ratioA) / (ratioB - ratioA);
+        const segmentRatio = (ratio - ratioA) / (ratioB - ratioA);
 
         return {
             pt: this.interpolateBetweenPoints(a, b, segmentRatio),
@@ -152,7 +152,7 @@ L.PolylineDecoratorUtil = {
     * at the given ratio of the distance from A to B, by linear interpolation.
     */
     interpolateBetweenPoints: function (ptA, ptB, ratio) {
-        if(ptB.x != ptA.x) {
+        if (ptB.x != ptA.x) {
             return L.point(
                 (ptA.x * (1 - ratio)) + (ratio * ptB.x),
                 (ptA.y * (1 - ratio)) + (ratio * ptB.y)

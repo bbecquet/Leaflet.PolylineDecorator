@@ -8,9 +8,9 @@ L.PolylineDecoratorUtil = {
         if (nbPts < 2) {
             return 0;
         }
-        var dist = 0,
-            prevPt = pts[0],
-            pt;
+        var dist = 0;
+        var prevPt = pts[0];
+        var pt = void 0;
         for (var i = 1; i < nbPts; i++) {
             dist += prevPt.distanceTo(pt = pts[i]);
             prevPt = pt;
@@ -19,14 +19,14 @@ L.PolylineDecoratorUtil = {
     },
 
     getPixelLength: function getPixelLength(pl, map) {
-        var ll = pl instanceof L.Polyline ? pl.getLatLngs() : pl,
-            nbPts = ll.length;
+        var ll = pl instanceof L.Polyline ? pl.getLatLngs() : pl;
+        var nbPts = ll.length;
         if (nbPts < 2) {
             return 0;
         }
-        var dist = 0,
-            prevPt = map.project(ll[0]),
-            pt;
+        var dist = 0;
+        var prevPt = map.project(ll[0]),
+            pt = void 0;
         for (var i = 1; i < nbPts; i++) {
             dist += prevPt.distanceTo(pt = map.project(ll[i]));
             prevPt = pt;
@@ -245,8 +245,8 @@ L.Symbol.Dash = L.Class.extend({
     },
 
     buildSymbol: function buildSymbol(dirPoint, latLngs, map, index, total) {
-        var opts = this.options,
-            d2r = Math.PI / 180;
+        var opts = this.options;
+        var d2r = Math.PI / 180;
 
         // for a dot, nothing more to compute
         if (opts.pixelSize <= 1) {
@@ -285,14 +285,7 @@ L.Symbol.ArrowHead = L.Class.extend({
     },
 
     buildSymbol: function buildSymbol(dirPoint, latLngs, map, index, total) {
-        var opts = this.options;
-        var path;
-        if (opts.polygon) {
-            path = L.polygon(this._buildArrowPath(dirPoint, map), opts.pathOptions);
-        } else {
-            path = L.polyline(this._buildArrowPath(dirPoint, map), opts.pathOptions);
-        }
-        return path;
+        return this.options.polygon ? L.polygon(this._buildArrowPath(dirPoint, map), this.options.pathOptions) : L.polyline(this._buildArrowPath(dirPoint, map), this.options.pathOptions);
     },
 
     _buildArrowPath: function _buildArrowPath(dirPoint, map) {
@@ -301,10 +294,10 @@ L.Symbol.ArrowHead = L.Class.extend({
         var direction = -(dirPoint.heading - 90) * d2r;
         var radianArrowAngle = this.options.headAngle / 2 * d2r;
 
-        var headAngle1 = direction + radianArrowAngle,
-            headAngle2 = direction - radianArrowAngle;
-        var arrowHead1 = L.point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle1), tipPoint.y + this.options.pixelSize * Math.sin(headAngle1)),
-            arrowHead2 = L.point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle2), tipPoint.y + this.options.pixelSize * Math.sin(headAngle2));
+        var headAngle1 = direction + radianArrowAngle;
+        var headAngle2 = direction - radianArrowAngle;
+        var arrowHead1 = L.point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle1), tipPoint.y + this.options.pixelSize * Math.sin(headAngle1));
+        var arrowHead2 = L.point(tipPoint.x - this.options.pixelSize * Math.cos(headAngle2), tipPoint.y + this.options.pixelSize * Math.sin(headAngle2));
 
         return [map.unproject(arrowHead1), dirPoint.latLng, map.unproject(arrowHead2)];
     }
@@ -360,15 +353,16 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * array of one of the previous.
     */
     _initPaths: function _initPaths(p) {
+        var _this = this;
+
         this._paths = [];
-        var isPolygon = false;
         if (p instanceof L.Polyline) {
             this._initPath(p.getLatLngs(), p instanceof L.Polygon);
         } else if (L.Util.isArray(p) && p.length > 0) {
             if (p[0] instanceof L.Polyline) {
-                for (var i = 0; i < p.length; i++) {
-                    this._initPath(p[i].getLatLngs(), p[i] instanceof L.Polygon);
-                }
+                p.forEach(function (singleP) {
+                    _this._initPath(singleP, single instanceof L.Polygon);
+                });
             } else {
                 this._initPath(p);
             }
@@ -380,14 +374,10 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     _initPath: function _initPath(path, isPolygon) {
-        var latLngs;
         // It may still be an array of array of coordinates
         // (ex: polygon with rings)
-        if (this._isCoordArray(path)) {
-            latLngs = [path];
-        } else {
-            latLngs = path;
-        }
+        var latLngs = this._isCoordArray(path) ? [path] : path;
+
         for (var i = 0; i < latLngs.length; i++) {
             // As of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
             // Our algorithm needs it, so we add it back explicitly.
@@ -399,16 +389,18 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     _initPatterns: function _initPatterns() {
+        var _this2 = this;
+
         this._isZoomDependant = false;
         this._patterns = [];
-        var pattern;
+        var pattern = void 0;
         // parse pattern definitions and precompute some values
-        for (var i = 0; i < this.options.patterns.length; i++) {
-            pattern = this._parsePatternDef(this.options.patterns[i]);
-            this._patterns.push(pattern);
+        this.options.patterns.forEach(function (patternDef) {
+            pattern = _this2._parsePatternDef(patternDef);
+            _this2._patterns.push(pattern);
             // determines if we have to recompute the pattern on each zoom change
-            this._isZoomDependant = this._isZoomDependant || pattern.isOffsetInPixels || pattern.isEndOffsetInPixels || pattern.isRepeatInPixels || pattern.symbolFactory.isZoomDependant;
-        }
+            _this2._isZoomDependant = _this2._isZoomDependant || pattern.isOffsetInPixels || pattern.isEndOffsetInPixels || pattern.isRepeatInPixels || pattern.symbolFactory.isZoomDependant;
+        });
     },
 
     /**
@@ -488,16 +480,16 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Returns an array of ILayers object
     */
     _buildSymbols: function _buildSymbols(latLngs, symbolFactory, directionPoints) {
-        var symbols = [];
-        for (var i = 0, l = directionPoints.length; i < l; i++) {
-            symbols.push(symbolFactory.buildSymbol(directionPoints[i], latLngs, this._map, i, l));
-        }
-        return symbols;
+        var _this3 = this;
+
+        return directionPoints.map(function (directionPoint, i) {
+            return symbolFactory.buildSymbol(directionPoint, latLngs, _this3._map, i, directionPoints.length);
+        });
     },
 
     _getCache: function _getCache(pattern, zoom, pathIndex) {
         var zoomCache = pattern.cache[zoom];
-        if (typeof zoomCache === 'undefined') {
+        if (!zoomCache) {
             pattern.cache[zoom] = [];
             return null;
         }
@@ -511,20 +503,20 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     _getDirectionPoints: function _getDirectionPoints(pathIndex, pattern) {
         var zoom = this._map.getZoom();
-        var dirPoints = this._getCache(pattern, zoom, pathIndex);
-        if (dirPoints) {
-            return dirPoints;
+        var cachedDirPoints = this._getCache(pattern, zoom, pathIndex);
+        if (cachedDirPoints) {
+            return cachedDirPoints;
         }
 
         var latLngs = this._paths[pathIndex];
         if (latLngs.length < 2) {
             return [];
         }
-        var offset,
-            endOffset,
-            repeat,
-            pathPixelLength = null;
 
+        var offset = void 0,
+            endOffset = void 0,
+            repeat = void 0,
+            pathPixelLength = null;
         if (pattern.isOffsetInPixels) {
             pathPixelLength = L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
             offset = pattern.offset / pathPixelLength;
@@ -543,7 +535,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.PolylineDecoratorUtil.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
+        var dirPoints = L.PolylineDecoratorUtil.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
         // save in cache to avoid recomputing this
         pattern.cache[zoom][pathIndex] = dirPoints;
 
@@ -566,12 +558,14 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     _redraw: function _redraw(clearCache) {
-        if (this._map === null) return;
+        if (!this._map) {
+            return;
+        }
         this.clearLayers();
         if (clearCache) {
-            for (var i = 0; i < this._patterns.length; i++) {
-                this._patterns[i].cache = [];
-            }
+            this._patterns.forEach(function (pattern) {
+                pattern.cache = [];
+            });
         }
         this._draw();
     },
@@ -580,23 +574,28 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Draw a single pattern
     */
     _drawPattern: function _drawPattern(pattern) {
-        var directionPoints, symbols;
-        for (var i = 0; i < this._paths.length; i++) {
-            directionPoints = this._getDirectionPoints(i, pattern);
-            symbols = this._buildSymbols(this._paths[i], pattern.symbolFactory, directionPoints);
-            for (var j = 0; j < symbols.length; j++) {
-                this.addLayer(symbols[j]);
-            }
-        }
+        var _this4 = this;
+
+        var directionPoints = void 0,
+            symbols = void 0;
+        this._paths.forEach(function (path, i) {
+            directionPoints = _this4._getDirectionPoints(i, pattern);
+            symbols = _this4._buildSymbols(path, pattern.symbolFactory, directionPoints);
+            symbols.forEach(function (symbol) {
+                _this4.addLayer(symbol);
+            });
+        });
     },
 
     /**
     * Draw all patterns
     */
     _draw: function _draw() {
-        for (var i = 0; i < this._patterns.length; i++) {
-            this._drawPattern(this._patterns[i]);
-        }
+        var _this5 = this;
+
+        this._patterns.forEach(function (pattern) {
+            _this5._drawPattern(pattern);
+        });
     }
 });
 /*

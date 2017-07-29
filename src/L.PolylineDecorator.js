@@ -21,14 +21,13 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     _initPaths: function(p) {
         this._paths = [];
-        var isPolygon = false;
-        if(p instanceof L.Polyline) {
+        if (p instanceof L.Polyline) {
             this._initPath(p.getLatLngs(), (p instanceof L.Polygon));
-        } else if(L.Util.isArray(p) && p.length > 0) {
-            if(p[0] instanceof L.Polyline) {
-                for(var i=0; i<p.length; i++) {
-                    this._initPath(p[i].getLatLngs(), (p[i] instanceof L.Polygon));
-                }
+        } else if (L.Util.isArray(p) && p.length > 0) {
+            if (p[0] instanceof L.Polyline) {
+                p.forEach(singleP => {
+                    this._initPath(singleP, (single instanceof L.Polygon));
+                });
             } else {
                 this._initPath(p);
             }
@@ -36,25 +35,21 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     _isCoordArray: function(ll) {
-        return(L.Util.isArray(ll) && ll.length > 0 && (
+        return (L.Util.isArray(ll) && ll.length > 0 && (
             ll[0] instanceof L.LatLng ||
             (L.Util.isArray(ll[0]) && ll[0].length == 2 && typeof ll[0][0] === 'number')
         ));
     },
 
     _initPath: function(path, isPolygon) {
-        var latLngs;
         // It may still be an array of array of coordinates
         // (ex: polygon with rings)
-        if(this._isCoordArray(path)) {
-            latLngs = [path];
-        } else {
-            latLngs = path;
-        }
-        for(var i=0; i<latLngs.length; i++) {
+        const latLngs = this._isCoordArray(path) ? [path] : path;
+
+        for(let i=0; i<latLngs.length; i++) {
             // As of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
             // Our algorithm needs it, so we add it back explicitly.
-            if(isPolygon) {
+            if (isPolygon) {
                 latLngs[i].push(latLngs[i][0]);
             }
             this._paths.push(latLngs[i]);
@@ -64,10 +59,10 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     _initPatterns: function() {
         this._isZoomDependant = false;
         this._patterns = [];
-        var pattern;
+        let pattern;
         // parse pattern definitions and precompute some values
-        for(var i=0;i<this.options.patterns.length;i++) {
-            pattern = this._parsePatternDef(this.options.patterns[i]);
+        this.options.patterns.forEach(patternDef => {
+            pattern = this._parsePatternDef(patternDef);
             this._patterns.push(pattern);
             // determines if we have to recompute the pattern on each zoom change
             this._isZoomDependant = this._isZoomDependant ||
@@ -75,7 +70,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
                 pattern.isEndOffsetInPixels ||
                 pattern.isRepeatInPixels ||
                 pattern.symbolFactory.isZoomDependant;
-        }
+        });
     },
 
     /**
@@ -101,7 +96,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Parse the pattern definition
     */
     _parsePatternDef: function(patternDef, latLngs) {
-        var pattern = {
+        const pattern = {
             cache: [],
             symbolFactory: patternDef.symbol,
             isOffsetInPixels: false,
@@ -111,21 +106,21 @@ L.PolylineDecorator = L.FeatureGroup.extend({
 
         // Parse offset and repeat values, managing the two cases:
         // absolute (in pixels) or relative (in percentage of the polyline length)
-        if(typeof patternDef.offset === 'string' && patternDef.offset.indexOf('%') != -1) {
+        if (typeof patternDef.offset === 'string' && patternDef.offset.indexOf('%') != -1) {
             pattern.offset = parseFloat(patternDef.offset) / 100;
         } else {
             pattern.offset = patternDef.offset ? parseFloat(patternDef.offset) : 0;
             pattern.isOffsetInPixels = (pattern.offset > 0);
         }
 
-        if(typeof patternDef.endOffset === 'string' && patternDef.endOffset.indexOf('%') != -1) {
+        if (typeof patternDef.endOffset === 'string' && patternDef.endOffset.indexOf('%') != -1) {
             pattern.endOffset = parseFloat(patternDef.endOffset) / 100;
         } else {
             pattern.endOffset = patternDef.endOffset ? parseFloat(patternDef.endOffset) : 0;
             pattern.isEndOffsetInPixels = (pattern.endOffset > 0);
         }
 
-        if(typeof patternDef.repeat === 'string' && patternDef.repeat.indexOf('%') != -1) {
+        if (typeof patternDef.repeat === 'string' && patternDef.repeat.indexOf('%') != -1) {
             pattern.repeat = parseFloat(patternDef.repeat) / 100;
         } else {
             pattern.repeat = parseFloat(patternDef.repeat);
@@ -155,16 +150,14 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Returns an array of ILayers object
     */
     _buildSymbols: function(latLngs, symbolFactory, directionPoints) {
-        var symbols = [];
-        for(var i=0, l=directionPoints.length; i<l; i++) {
-            symbols.push(symbolFactory.buildSymbol(directionPoints[i], latLngs, this._map, i, l));
-        }
-        return symbols;
+        return directionPoints.map((directionPoint, i) =>
+            symbolFactory.buildSymbol(directionPoint, latLngs, this._map, i, directionPoints.length)
+        );
     },
 
     _getCache: function(pattern, zoom, pathIndex) {
-        var zoomCache = pattern.cache[zoom];
-        if(typeof zoomCache === 'undefined') {
+        const zoomCache = pattern.cache[zoom];
+        if (!zoomCache) {
             pattern.cache[zoom] = [];
             return null;
         }
@@ -177,37 +170,37 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * on the path
     */
     _getDirectionPoints: function(pathIndex, pattern) {
-        var zoom = this._map.getZoom();
-        var dirPoints = this._getCache(pattern, zoom, pathIndex);
-        if(dirPoints) {
-            return dirPoints;
+        const zoom = this._map.getZoom();
+        const cachedDirPoints = this._getCache(pattern, zoom, pathIndex);
+        if (cachedDirPoints) {
+            return cachedDirPoints;
         }
 
-        var latLngs = this._paths[pathIndex];
+        const latLngs = this._paths[pathIndex];
         if (latLngs.length < 2) {
             return [];
         }
-        var offset, endOffset, repeat, pathPixelLength = null;
 
-        if(pattern.isOffsetInPixels) {
+        let offset, endOffset, repeat, pathPixelLength = null;
+        if (pattern.isOffsetInPixels) {
             pathPixelLength =  L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
             offset = pattern.offset/pathPixelLength;
         } else {
             offset = pattern.offset;
         }
-        if(pattern.isEndOffsetInPixels) {
+        if (pattern.isEndOffsetInPixels) {
             pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
             endOffset = pattern.endOffset/pathPixelLength;
         } else {
             endOffset = pattern.endOffset;
         }
-        if(pattern.isRepeatInPixels) {
+        if (pattern.isRepeatInPixels) {
             pathPixelLength = (pathPixelLength !== null) ? pathPixelLength : L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
             repeat = pattern.repeat/pathPixelLength;
         } else {
             repeat = pattern.repeat;
         }
-        dirPoints = L.PolylineDecoratorUtil.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
+        const dirPoints = L.PolylineDecoratorUtil.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
         // save in cache to avoid recomputing this
         pattern.cache[zoom][pathIndex] = dirPoints;
 
@@ -230,13 +223,12 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     _redraw: function(clearCache) {
-        if(this._map === null)
+        if (!this._map) {
             return;
+        }
         this.clearLayers();
-        if(clearCache) {
-            for(var i=0; i<this._patterns.length; i++) {
-                this._patterns[i].cache = [];
-            }
+        if (clearCache) {
+            this._patterns.forEach(pattern => { pattern.cache = []; });
         }
         this._draw();
     },
@@ -245,23 +237,19 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Draw a single pattern
     */
     _drawPattern: function(pattern) {
-        var directionPoints, symbols;
-        for(var i=0; i < this._paths.length; i++) {
+        let directionPoints, symbols;
+        this._paths.forEach((path, i) => {
             directionPoints = this._getDirectionPoints(i, pattern);
-            symbols = this._buildSymbols(this._paths[i], pattern.symbolFactory, directionPoints);
-            for(var j=0; j < symbols.length; j++) {
-                this.addLayer(symbols[j]);
-            }
-        }
+            symbols = this._buildSymbols(path, pattern.symbolFactory, directionPoints);
+            symbols.forEach(symbol => { this.addLayer(symbol); });
+        });
     },
 
     /**
     * Draw all patterns
     */
     _draw: function () {
-        for(var i=0; i<this._patterns.length; i++) {
-            this._drawPattern(this._patterns[i]);
-        }
+        this._patterns.forEach(pattern => { this._drawPattern(pattern); });
     }
 });
 /*
