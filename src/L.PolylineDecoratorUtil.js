@@ -42,14 +42,13 @@ L.PolylineDecoratorUtil = {
     * map: the map, to access the current projection state
     */
     projectPatternOnPath: function (path, offsetRatio, endOffsetRatio, repeatRatio, map) {
-        const pathAsPoints = path.map(ll => map.project(ll));
+        const pathAsPoints = path.map(latLng => map.project(latLng));
 
         // project the pattern as pixel points
-        var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, endOffsetRatio, repeatRatio);
+        const pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, endOffsetRatio, repeatRatio);
         // and convert it to latlngs;
-        for(let i=0, l=pattern.length; i<l; i++) {
-            pattern[i].latLng = map.unproject(pattern[i].pt);
-        }
+        pattern.forEach(point => { point.latLng = map.unproject(point.pt); });
+
         return pattern;
     },
 
