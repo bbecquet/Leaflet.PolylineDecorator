@@ -4,11 +4,11 @@
   "repository": "bbecquet/Leaflet.PolylineDecorator",
   "main": "./dist/leaflet.polylineDecorator.js",
   "scripts": {
+    "build": "rollup -c",
     "prepublish": "gulp"
   },
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-concat": "^2.6.0"
+    "rollup": "^0.45.2"
   },
   "license": "MIT"
 }
