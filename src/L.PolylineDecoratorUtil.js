@@ -5,33 +5,15 @@ L.PolylineDecoratorUtil = {
     },
 
     getPointPathPixelLength: function(pts) {
-        const nbPts = pts.length;
-        if (nbPts < 2) {
-            return 0;
-        }
-        let dist = 0;
-        let prevPt = pts[0];
-        let pt;
-        for (let i=1; i<nbPts; i++) {
-            dist += prevPt.distanceTo(pt = pts[i]);
-            prevPt = pt;
-        }
-        return dist;
+        return pts.reduce((distance, pt, i) => {
+            return i === 0 ? 0 : distance + pt.distanceTo(pts[i - 1]);
+        }, 0);
     },
 
     getPixelLength: function(pl, map) {
-        const ll = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl;
-        const nbPts = ll.length;
-        if (nbPts < 2) {
-            return 0;
-        }
-        let dist = 0;
-        let prevPt = map.project(ll[0]), pt;
-        for (let i=1; i<nbPts; i++) {
-            dist += prevPt.distanceTo(pt = map.project(ll[i]));
-            prevPt = pt;
-        }
-        return dist;
+        const latLngs = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl;
+        const points = latLngs.map(latLng => map.project(latLng));
+        return this.getPointPathPixelLength(points);
     },
 
     /**
