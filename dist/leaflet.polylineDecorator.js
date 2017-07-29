@@ -217,11 +217,6 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
-/**
-* Defines several classes of symbol factories,
-* to be used with L.PolylineDecorator
-*/
-
 L.Symbol = L.Symbol || {};
 
 /**
@@ -388,15 +383,12 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     _initPatterns: function _initPatterns() {
         var _this2 = this;
 
-        this._isZoomDependant = false;
         this._patterns = [];
         var pattern = void 0;
         // parse pattern definitions and precompute some values
         this.options.patterns.forEach(function (patternDef) {
             pattern = _this2._parsePatternDef(patternDef);
             _this2._patterns.push(pattern);
-            // determines if we have to recompute the pattern on each zoom change
-            _this2._isZoomDependant = _this2._isZoomDependant || pattern.isOffsetInPixels || pattern.isEndOffsetInPixels || pattern.isRepeatInPixels || pattern.symbolFactory.isZoomDependant;
         });
     },
 
@@ -407,7 +399,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     setPatterns: function setPatterns(patterns) {
         this.options.patterns = patterns;
         this._initPatterns();
-        this._softRedraw();
+        this.redraw();
     },
 
     /**
@@ -438,7 +430,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     _parsePatternDef: function _parsePatternDef(patternDef, latLngs) {
         return {
-            cache: [],
             symbolFactory: patternDef.symbol,
             // Parse offset and repeat values, managing the two cases:
             // absolute (in pixels) or relative (in percentage of the polyline length)
@@ -451,15 +442,11 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     onAdd: function onAdd(map) {
         this._map = map;
         this._draw();
-        // listen to zoom changes to redraw pixel-spaced patterns
-        if (this._isZoomDependant) {
-            this._map.on('zoomend', this._softRedraw, this);
-        }
+        this._map.on('moveend', this.redraw, this);
     },
 
     onRemove: function onRemove(map) {
-        // remove optional map zoom listener
-        this._map.off('zoomend', this._softRedraw, this);
+        this._map.off('moveend', this.redraw, this);
         this._map = null;
         L.LayerGroup.prototype.onRemove.call(this, map);
     },
@@ -475,15 +462,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         });
     },
 
-    _getCache: function _getCache(pattern, zoom, pathIndex) {
-        var zoomCache = pattern.cache[zoom];
-        if (!zoomCache) {
-            pattern.cache[zoom] = [];
-            return null;
-        }
-        return zoomCache[pathIndex];
-    },
-
     _asRatioToPathLength: function _asRatioToPathLength(_ref, totalPathLength) {
         var value = _ref.value,
             isInPixels = _ref.isInPixels;
@@ -497,12 +475,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * on the path
     */
     _getDirectionPoints: function _getDirectionPoints(pathIndex, pattern) {
-        var zoom = this._map.getZoom();
-        var cachedDirPoints = this._getCache(pattern, zoom, pathIndex);
-        if (cachedDirPoints) {
-            return cachedDirPoints;
-        }
-
         var latLngs = this._paths[pathIndex];
         if (latLngs.length < 2) {
             return [];
@@ -515,38 +487,17 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             repeat: this._asRatioToPathLength(pattern.repeat, pathPixelLength)
         };
 
-        var dirPoints = projectPatternOnPath(latLngs, ratios, this._map);
-        // save in cache to avoid recomputing this
-        pattern.cache[zoom][pathIndex] = dirPoints;
-
-        return dirPoints;
+        return projectPatternOnPath(latLngs, ratios, this._map);
     },
 
     /**
     * Public redraw, invalidating the cache.
     */
     redraw: function redraw() {
-        this._redraw(true);
-    },
-
-    /**
-    * "Soft" redraw, called internally for example on zoom changes,
-    * keeping the cache.
-    */
-    _softRedraw: function _softRedraw() {
-        this._redraw(false);
-    },
-
-    _redraw: function _redraw(clearCache) {
         if (!this._map) {
             return;
         }
         this.clearLayers();
-        if (clearCache) {
-            this._patterns.forEach(function (pattern) {
-                pattern.cache = [];
-            });
-        }
         this._draw();
     },
 
@@ -558,8 +509,14 @@ L.PolylineDecorator = L.FeatureGroup.extend({
 
         var directionPoints = void 0,
             symbols = void 0;
+        var mapBounds = this._map.getBounds();
         return this._paths.map(function (path, i) {
-            directionPoints = _this4._getDirectionPoints(i, pattern);
+            directionPoints = _this4._getDirectionPoints(i, pattern)
+            // filter out invisible points
+            .filter(function (point) {
+                return mapBounds.contains(point.latLng);
+            });
+
             return L.layerGroup(_this4._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },
