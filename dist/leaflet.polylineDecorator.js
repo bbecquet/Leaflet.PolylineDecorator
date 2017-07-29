@@ -217,6 +217,11 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
+/**
+* Defines several classes of symbol factories,
+* to be used with L.PolylineDecorator
+*/
+
 L.Symbol = L.Symbol || {};
 
 /**
@@ -509,7 +514,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
 
         var directionPoints = void 0,
             symbols = void 0;
-        var mapBounds = this._map.getBounds();
+        var mapBounds = this._map.getBounds().pad(0.1);
         return this._paths.map(function (path, i) {
             directionPoints = _this4._getDirectionPoints(i, pattern)
             // filter out invisible points

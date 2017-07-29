@@ -178,7 +178,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     _getPatternLayers: function(pattern) {
         let directionPoints, symbols;
-        const mapBounds = this._map.getBounds();
+        const mapBounds = this._map.getBounds().pad(0.1);
         return this._paths.map((path, i) => {
             directionPoints = this._getDirectionPoints(i, pattern)
                 // filter out invisible points
