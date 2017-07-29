@@ -9,12 +9,30 @@
     "prepublish": "gulp"
   },
   "devDependencies": {
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-latest": "^6.24.1",
     "rollup": "^0.45.2",
+    "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-watch": "^4.3.1"
   },
   "dependencies": {
     "leaflet-rotatedmarker": "^0.2.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "babel": {
+    "presets": [
+      [
+        "latest",
+        {
+          "es2015": {
+            "modules": false
+          }
+        }
+      ]
+    ],
+    "plugins": [
+      "external-helpers"
+    ]
+  }
 }
