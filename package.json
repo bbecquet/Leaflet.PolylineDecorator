@@ -5,8 +5,7 @@
   "main": "./dist/leaflet.polylineDecorator.js",
   "scripts": {
     "build": "rollup -c",
-    "build:watch": "rollup -c -w",
-    "prepublish": "gulp"
+    "build:watch": "rollup -c -w"
   },
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
