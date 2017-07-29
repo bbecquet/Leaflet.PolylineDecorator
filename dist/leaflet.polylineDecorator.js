@@ -19,18 +19,19 @@ L.PolylineDecoratorUtil = {
 
     /**
     * path: array of L.LatLng
-    * offsetRatio: the ratio of the total pixel length where the pattern will start
-    * endOffsetRatio: the ratio of the total pixel length where the pattern will end
-    * repeatRatio: the ratio of the total pixel length between two points of the pattern
+    * ratios is an object with the following fields:
+    *   offset: the ratio of the total pixel length where the pattern will start
+    *   endOffset: the ratio of the total pixel length where the pattern will end
+    *   repeat: the ratio of the total pixel length between two points of the pattern
     * map: the map, to access the current projection state
     */
-    projectPatternOnPath: function projectPatternOnPath(path, offsetRatio, endOffsetRatio, repeatRatio, map) {
+    projectPatternOnPath: function projectPatternOnPath(path, ratios, map) {
         var pathAsPoints = path.map(function (latLng) {
             return map.project(latLng);
         });
 
         // project the pattern as pixel points
-        var pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, endOffsetRatio, repeatRatio);
+        var pattern = this.projectPatternOnPointPath(pathAsPoints, ratios);
         // and convert it to latlngs;
         pattern.forEach(function (point) {
             point.latLng = map.unproject(point.pt);
@@ -39,16 +40,20 @@ L.PolylineDecoratorUtil = {
         return pattern;
     },
 
-    projectPatternOnPointPath: function projectPatternOnPointPath(pts, offsetRatio, endOffsetRatio, repeatRatio) {
+    projectPatternOnPointPath: function projectPatternOnPointPath(pts, _ref) {
+        var offset = _ref.offset,
+            endOffset = _ref.endOffset,
+            repeat = _ref.repeat;
+
         var positions = [];
         // 1. compute the absolute interval length in pixels
-        var repeatIntervalLength = this.getPointPathPixelLength(pts) * repeatRatio;
-        // 2. find the starting point by using the offsetRatio and find the last pixel using endOffsetRatio
-        var previous = this.interpolateOnPointPath(pts, offsetRatio);
-        var endOffsetPixels = endOffsetRatio > 0 ? this.getPointPathPixelLength(pts) * endOffsetRatio : 0;
+        var repeatIntervalLength = this.getPointPathPixelLength(pts) * repeat;
+        // 2. find the starting point by using the offset and find the last pixel using endOffset
+        var previous = this.interpolateOnPointPath(pts, offset);
+        var endOffsetPixels = endOffset > 0 ? this.getPointPathPixelLength(pts) * endOffset : 0;
 
         positions.push(previous);
-        if (repeatRatio > 0) {
+        if (repeat > 0) {
             // 3. consider only the rest of the path, starting at the previous point
             var remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
@@ -405,42 +410,33 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         this.redraw();
     },
 
+    _parseRelativeOrAbsoluteValue: function _parseRelativeOrAbsoluteValue(value) {
+        if (typeof value === 'string' && value.indexOf('%') !== -1) {
+            return {
+                value: parseFloat(value) / 100,
+                isInPixels: false
+            };
+        }
+        var parsedValue = value ? parseFloat(value) : 0;
+        return {
+            value: parsedValue,
+            isInPixels: parsedValue > 0
+        };
+    },
+
     /**
     * Parse the pattern definition
     */
     _parsePatternDef: function _parsePatternDef(patternDef, latLngs) {
-        var pattern = {
+        return {
             cache: [],
             symbolFactory: patternDef.symbol,
-            isOffsetInPixels: false,
-            isEndOffsetInPixels: false,
-            isRepeatInPixels: false
+            // Parse offset and repeat values, managing the two cases:
+            // absolute (in pixels) or relative (in percentage of the polyline length)
+            offset: this._parseRelativeOrAbsoluteValue(patternDef.offset),
+            endOffset: this._parseRelativeOrAbsoluteValue(patternDef.endOffset),
+            repeat: this._parseRelativeOrAbsoluteValue(patternDef.repeat)
         };
-
-        // Parse offset and repeat values, managing the two cases:
-        // absolute (in pixels) or relative (in percentage of the polyline length)
-        if (typeof patternDef.offset === 'string' && patternDef.offset.indexOf('%') != -1) {
-            pattern.offset = parseFloat(patternDef.offset) / 100;
-        } else {
-            pattern.offset = patternDef.offset ? parseFloat(patternDef.offset) : 0;
-            pattern.isOffsetInPixels = pattern.offset > 0;
-        }
-
-        if (typeof patternDef.endOffset === 'string' && patternDef.endOffset.indexOf('%') != -1) {
-            pattern.endOffset = parseFloat(patternDef.endOffset) / 100;
-        } else {
-            pattern.endOffset = patternDef.endOffset ? parseFloat(patternDef.endOffset) : 0;
-            pattern.isEndOffsetInPixels = pattern.endOffset > 0;
-        }
-
-        if (typeof patternDef.repeat === 'string' && patternDef.repeat.indexOf('%') != -1) {
-            pattern.repeat = parseFloat(patternDef.repeat) / 100;
-        } else {
-            pattern.repeat = parseFloat(patternDef.repeat);
-            pattern.isRepeatInPixels = pattern.repeat > 0;
-        }
-
-        return pattern;
     },
 
     onAdd: function onAdd(map) {
@@ -479,6 +475,13 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         return zoomCache[pathIndex];
     },
 
+    _asRatioToPathLength: function _asRatioToPathLength(_ref, totalPathLength) {
+        var value = _ref.value,
+            isInPixels = _ref.isInPixels;
+
+        return isInPixels ? value / totalPathLength : value;
+    },
+
     /**
     * Select pairs of LatLng and heading angle,
     * that define positions and directions of the symbols
@@ -496,29 +499,14 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             return [];
         }
 
-        var offset = void 0,
-            endOffset = void 0,
-            repeat = void 0,
-            pathPixelLength = null;
-        if (pattern.isOffsetInPixels) {
-            pathPixelLength = L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
-            offset = pattern.offset / pathPixelLength;
-        } else {
-            offset = pattern.offset;
-        }
-        if (pattern.isEndOffsetInPixels) {
-            pathPixelLength = pathPixelLength !== null ? pathPixelLength : L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
-            endOffset = pattern.endOffset / pathPixelLength;
-        } else {
-            endOffset = pattern.endOffset;
-        }
-        if (pattern.isRepeatInPixels) {
-            pathPixelLength = pathPixelLength !== null ? pathPixelLength : L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
-            repeat = pattern.repeat / pathPixelLength;
-        } else {
-            repeat = pattern.repeat;
-        }
-        var dirPoints = L.PolylineDecoratorUtil.projectPatternOnPath(latLngs, offset, endOffset, repeat, this._map);
+        var pathPixelLength = L.PolylineDecoratorUtil.getPixelLength(latLngs, this._map);
+        var ratios = {
+            offset: this._asRatioToPathLength(pattern.offset, pathPixelLength),
+            endOffset: this._asRatioToPathLength(pattern.endOffset, pathPixelLength),
+            repeat: this._asRatioToPathLength(pattern.repeat, pathPixelLength)
+        };
+
+        var dirPoints = L.PolylineDecoratorUtil.projectPatternOnPath(latLngs, ratios, this._map);
         // save in cache to avoid recomputing this
         pattern.cache[zoom][pathIndex] = dirPoints;
 

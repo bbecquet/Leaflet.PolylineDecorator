@@ -18,32 +18,33 @@ L.PolylineDecoratorUtil = {
 
     /**
     * path: array of L.LatLng
-    * offsetRatio: the ratio of the total pixel length where the pattern will start
-    * endOffsetRatio: the ratio of the total pixel length where the pattern will end
-    * repeatRatio: the ratio of the total pixel length between two points of the pattern
+    * ratios is an object with the following fields:
+    *   offset: the ratio of the total pixel length where the pattern will start
+    *   endOffset: the ratio of the total pixel length where the pattern will end
+    *   repeat: the ratio of the total pixel length between two points of the pattern
     * map: the map, to access the current projection state
     */
-    projectPatternOnPath: function (path, offsetRatio, endOffsetRatio, repeatRatio, map) {
+    projectPatternOnPath: function (path, ratios, map) {
         const pathAsPoints = path.map(latLng => map.project(latLng));
 
         // project the pattern as pixel points
-        const pattern = this.projectPatternOnPointPath(pathAsPoints, offsetRatio, endOffsetRatio, repeatRatio);
+        const pattern = this.projectPatternOnPointPath(pathAsPoints, ratios);
         // and convert it to latlngs;
         pattern.forEach(point => { point.latLng = map.unproject(point.pt); });
 
         return pattern;
     },
 
-    projectPatternOnPointPath: function (pts, offsetRatio, endOffsetRatio, repeatRatio) {
+    projectPatternOnPointPath: function (pts, { offset, endOffset, repeat }) {
         const positions = [];
         // 1. compute the absolute interval length in pixels
-        const repeatIntervalLength = this.getPointPathPixelLength(pts) * repeatRatio;
-        // 2. find the starting point by using the offsetRatio and find the last pixel using endOffsetRatio
-        let previous = this.interpolateOnPointPath(pts, offsetRatio);
-        const endOffsetPixels = endOffsetRatio > 0 ? this.getPointPathPixelLength(pts) * endOffsetRatio : 0;
+        const repeatIntervalLength = this.getPointPathPixelLength(pts) * repeat;
+        // 2. find the starting point by using the offset and find the last pixel using endOffset
+        let previous = this.interpolateOnPointPath(pts, offset);
+        const endOffsetPixels = endOffset > 0 ? this.getPointPathPixelLength(pts) * endOffset : 0;
 
         positions.push(previous);
-        if (repeatRatio > 0) {
+        if (repeat > 0) {
             // 3. consider only the rest of the path, starting at the previous point
             let remainingPath = pts;
             remainingPath = remainingPath.slice(previous.predecessor);
