@@ -7,9 +7,9 @@ A Leaflet plug-in to define and draw patterns on existing Polylines or along coo
 
 ## Compatibility with Leaflet versions
 
-The development version of the plugin (on the `master` branch) is targeted at the 1.x version of Leaflet.
+**The current version of the plugin (on the `master` branch) works only with versions 1.\* of Leaflet**.
 
-For a version of the plugin compatible with the 0.7.x Leaflet release, use the `leaflet-0.7.2` branch.
+For a version of the plugin compatible with the older 0.7.* Leaflet releases, use the `leaflet-0.7.2` branch. But this branch is not maintained anymore and Leaflet 1.* has been around for a while, so you should definitely update.
 
 ## npm / bower
 
