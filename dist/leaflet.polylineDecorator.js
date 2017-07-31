@@ -4,18 +4,17 @@
 	(factory());
 }(this, (function () { 'use strict';
 
-function computeAngle(a, b) {
+function computeSegmentHeading(a, b) {
     return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90;
 }
 
-function getPointPathPixelLength(pts) {
+var getPointPathPixelLength = function getPointPathPixelLength(pts) {
     return pts.reduce(function (distance, pt, i) {
         return i === 0 ? 0 : distance + pt.distanceTo(pts[i - 1]);
     }, 0);
-}
+};
 
-function getPixelLength(pl, map) {
-    var latLngs = pl instanceof L.Polyline ? pl.getLatLngs() : pl;
+function getPixelLength(latLngs, map) {
     var points = latLngs.map(function (latLng) {
         return map.project(latLng);
     });
@@ -23,127 +22,102 @@ function getPixelLength(pl, map) {
 }
 
 /**
-* path: array of L.LatLng
 * ratios is an object with the following fields:
 *   offset: the ratio of the total pixel length where the pattern will start
 *   endOffset: the ratio of the total pixel length where the pattern will end
 *   repeat: the ratio of the total pixel length between two points of the pattern
 * map: the map, to access the current projection state
 */
-function projectPatternOnPath(path, ratios, map) {
-    var pathAsPoints = path.map(function (latLng) {
+function projectPatternOnPath(latLngs, ratios, map) {
+    var pathAsPoints = latLngs.map(function (latLng) {
         return map.project(latLng);
     });
 
-    // project the pattern as pixel points
-    var pattern = projectPatternOnPointPath(pathAsPoints, ratios);
-    // and convert it to latlngs;
-    pattern.forEach(function (point) {
-        point.latLng = map.unproject(point.pt);
+    return projectPatternOnPointPath(pathAsPoints, ratios).map(function (point) {
+        return {
+            latLng: map.unproject(point.pt),
+            heading: point.heading
+        };
     });
-
-    return pattern;
 }
+
+function pointsToSegments(pts) {
+    var segments = [];
+    var a = void 0,
+        b = void 0,
+        distA = 0,
+        distAB = void 0;
+    for (var i = 1, l = pts.length; i < l; i++) {
+        a = pts[i - 1];
+        b = pts[i];
+        distAB = a.distanceTo(b);
+        segments.push({
+            a: a,
+            b: b,
+            distA: distA, // distances from the start of the polyline
+            distB: distA + distAB,
+            heading: computeSegmentHeading(a, b)
+        });
+        distA += distAB;
+    }
+    return segments;
+}
+
+var getSegment = function getSegment(segments, offset) {
+    // @TODO: polyfill Array.find
+    var matchingSegment = void 0;
+    segments.forEach(function (segment) {
+        if (offset >= segment.distA && offset <= segment.distB) {
+            matchingSegment = segment;
+        }
+    });
+    return matchingSegment || segments[segments.length - 1];
+};
 
 function projectPatternOnPointPath(pts, _ref) {
     var offset = _ref.offset,
         endOffset = _ref.endOffset,
         repeat = _ref.repeat;
 
-    var positions = [];
-    // 1. compute the absolute interval length in pixels
-    var repeatIntervalLength = getPointPathPixelLength(pts) * repeat;
-    // 2. find the starting point by using the offset and find the last pixel using endOffset
-    var previous = interpolateOnPointPath(pts, offset);
-    var endOffsetPixels = endOffset > 0 ? getPointPathPixelLength(pts) * endOffset : 0;
+    // 1. split the path as segment infos
+    var segments = pointsToSegments(pts);
 
-    positions.push(previous);
-    if (repeat > 0) {
-        // 3. consider only the rest of the path, starting at the previous point
-        var remainingPath = pts;
-        remainingPath = remainingPath.slice(previous.predecessor);
-
-        remainingPath[0] = previous.pt;
-        var remainingLength = getPointPathPixelLength(remainingPath);
-
-        // 4. project as a ratio of the remaining length,
-        // and repeat while there is room for another point of the pattern
-
-        while (repeatIntervalLength <= remainingLength - endOffsetPixels) {
-            previous = interpolateOnPointPath(remainingPath, repeatIntervalLength / remainingLength);
-            positions.push(previous);
-            remainingPath = remainingPath.slice(previous.predecessor);
-            remainingPath[0] = previous.pt;
-            remainingLength = getPointPathPixelLength(remainingPath);
-        }
+    if (segments.length === 0) {
+        return [];
     }
-    return positions;
-}
 
-/**
-* pts: array of L.Point
-* ratio: the ratio of the total length where the point should be computed
-* Returns null if ll has less than 2 LatLng, or an object with the following properties:
-*    latLng: the LatLng of the interpolated point
-*    predecessor: the index of the previous vertex on the path
-*    heading: the heading of the path at this point, in degrees
-*/
-function interpolateOnPointPath(pts, ratio) {
-    var nbVertices = pts.length;
+    var totalPathLength = segments[segments.length - 1].distB;
+    var repeatIntervalPixels = totalPathLength * repeat;
+    var startOffsetPixels = offset > 0 ? totalPathLength * offset : 0;
+    var endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
 
-    if (nbVertices < 2) {
-        return null;
-    }
-    // easy limit cases: ratio negative/zero => first vertex
-    if (ratio <= 0) {
+    // 2. generate the positions of the pattern as offsets from the polygon start
+    var positionOffsets = [];
+    var positionOffset = startOffsetPixels;
+    do {
+        positionOffsets.push(positionOffset);
+        positionOffset += repeatIntervalPixels;
+    } while (repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
+
+    return positionOffsets
+    // 3. projects offsets to segments
+    .map(function (positionOffset) {
         return {
-            pt: pts[0],
-            predecessor: 0,
-            heading: computeAngle(pts[0], pts[1])
+            positionOffset: positionOffset,
+            segment: getSegment(segments, positionOffset)
         };
-    }
-    // ratio >=1 => last vertex
-    if (ratio >= 1) {
+    })
+    // 4. interpolate on segment
+    .map(function (_ref2) {
+        var positionOffset = _ref2.positionOffset,
+            segment = _ref2.segment;
+
+        var segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
-            pt: pts[nbVertices - 1],
-            predecessor: nbVertices - 1,
-            heading: computeAngle(pts[nbVertices - 2], pts[nbVertices - 1])
+            pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
+            heading: segment.heading
         };
-    }
-    // 1-segment-only path => direct linear interpolation
-    if (nbVertices == 2) {
-        return {
-            pt: interpolateBetweenPoints(pts[0], pts[1], ratio),
-            predecessor: 0,
-            heading: computeAngle(pts[0], pts[1])
-        };
-    }
-
-    var pathLength = getPointPathPixelLength(pts);
-    var a = pts[0],
-        b = a,
-        ratioA = 0,
-        ratioB = 0,
-        distB = 0;
-    // follow the path segments until we find the one
-    // on which the point must lie => [ab]
-    var i = 1;
-    for (; i < nbVertices && ratioB < ratio; i++) {
-        a = b;
-        ratioA = ratioB;
-        b = pts[i];
-        distB += a.distanceTo(b);
-        ratioB = distB / pathLength;
-    }
-
-    // compute the ratio relative to the segment [ab]
-    var segmentRatio = (ratio - ratioA) / (ratioB - ratioA);
-
-    return {
-        pt: interpolateBetweenPoints(a, b, segmentRatio),
-        predecessor: i - 2,
-        heading: computeAngle(a, b)
-    };
+    });
 }
 
 /**
@@ -151,8 +125,8 @@ function interpolateOnPointPath(pts, ratio) {
 * at the given ratio of the distance from A to B, by linear interpolation.
 */
 function interpolateBetweenPoints(ptA, ptB, ratio) {
-    if (ptB.x != ptA.x) {
-        return L.point(ptA.x * (1 - ratio) + ratio * ptB.x, ptA.y * (1 - ratio) + ratio * ptB.y);
+    if (ptB.x !== ptA.x) {
+        return L.point(ptA.x + ratio * (ptB.x - ptA.x), ptA.y + ratio * (ptB.y - ptA.y));
     }
     // special case where points lie on the same vertical axis
     return L.point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
@@ -217,11 +191,6 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
-/**
-* Defines several classes of symbol factories,
-* to be used with L.PolylineDecorator
-*/
-
 L.Symbol = L.Symbol || {};
 
 /**

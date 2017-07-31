@@ -1,131 +1,97 @@
-function computeAngle(a, b) {
+function computeSegmentHeading(a, b) {
     return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
 }
 
-function getPointPathPixelLength(pts) {
-    return pts.reduce((distance, pt, i) => {
+const getPointPathPixelLength = pts =>
+    pts.reduce((distance, pt, i) => {
         return i === 0 ? 0 : distance + pt.distanceTo(pts[i - 1]);
     }, 0);
-}
 
-function getPixelLength(pl, map) {
-    const latLngs = (pl instanceof L.Polyline) ? pl.getLatLngs() : pl;
+function getPixelLength(latLngs, map) {
     const points = latLngs.map(latLng => map.project(latLng));
     return getPointPathPixelLength(points);
 }
 
 /**
-* path: array of L.LatLng
 * ratios is an object with the following fields:
 *   offset: the ratio of the total pixel length where the pattern will start
 *   endOffset: the ratio of the total pixel length where the pattern will end
 *   repeat: the ratio of the total pixel length between two points of the pattern
 * map: the map, to access the current projection state
 */
-function projectPatternOnPath(path, ratios, map) {
-    const pathAsPoints = path.map(latLng => map.project(latLng));
+function projectPatternOnPath(latLngs, ratios, map) {
+    const pathAsPoints = latLngs.map(latLng => map.project(latLng));
 
-    // project the pattern as pixel points
-    const pattern = projectPatternOnPointPath(pathAsPoints, ratios);
-    // and convert it to latlngs;
-    pattern.forEach(point => { point.latLng = map.unproject(point.pt); });
+    return projectPatternOnPointPath(pathAsPoints, ratios)
+        .map(point => ({
+            latLng: map.unproject(point.pt),
+            heading: point.heading,
+        }));
+}
 
-    return pattern;
+function pointsToSegments(pts) {
+    const segments = [];
+    let a, b, distA = 0, distAB;
+    for (let i = 1, l = pts.length; i < l; i++) {
+        a = pts[i - 1];
+        b = pts[i];
+        distAB = a.distanceTo(b);
+        segments.push({
+            a,
+            b,
+            distA,  // distances from the start of the polyline
+            distB: distA + distAB,
+            heading: computeSegmentHeading(a, b),
+        });
+        distA += distAB;
+    }
+    return segments;
+}
+
+const getSegment = (segments, offset) => {
+    // @TODO: polyfill Array.find
+    let matchingSegment;
+    segments.forEach(segment => {
+        if (offset >= segment.distA && offset <= segment.distB) {
+            matchingSegment = segment;
+        }
+    });
+    return matchingSegment || segments[segments.length - 1];
 }
 
 function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {
-    const positions = [];
-    // 1. compute the absolute interval length in pixels
-    const repeatIntervalLength = getPointPathPixelLength(pts) * repeat;
-    // 2. find the starting point by using the offset and find the last pixel using endOffset
-    let previous = interpolateOnPointPath(pts, offset);
-    const endOffsetPixels = endOffset > 0 ? getPointPathPixelLength(pts) * endOffset : 0;
+    // 1. split the path as segment infos
+    const segments = pointsToSegments(pts);
 
-    positions.push(previous);
-    if (repeat > 0) {
-        // 3. consider only the rest of the path, starting at the previous point
-        let remainingPath = pts;
-        remainingPath = remainingPath.slice(previous.predecessor);
+    if (segments.length === 0) { return []; }
 
-        remainingPath[0] = previous.pt;
-        let remainingLength = getPointPathPixelLength(remainingPath);
+    const totalPathLength = segments[segments.length - 1].distB;
+    const repeatIntervalPixels = totalPathLength * repeat;
+    const startOffsetPixels = offset > 0 ? totalPathLength * offset : 0;
+    const endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
 
-        // 4. project as a ratio of the remaining length,
-        // and repeat while there is room for another point of the pattern
+    // 2. generate the positions of the pattern as offsets from the polygon start
+    const positionOffsets = [];
+    let positionOffset = startOffsetPixels;
+    do {
+        positionOffsets.push(positionOffset);
+        positionOffset += repeatIntervalPixels;
+    } while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
-        while (repeatIntervalLength <= remainingLength-endOffsetPixels) {
-            previous = interpolateOnPointPath(remainingPath, repeatIntervalLength/remainingLength);
-            positions.push(previous);
-            remainingPath = remainingPath.slice(previous.predecessor);
-            remainingPath[0] = previous.pt;
-            remainingLength = getPointPathPixelLength(remainingPath);
-        }
-    }
-    return positions;
-}
-
-/**
-* pts: array of L.Point
-* ratio: the ratio of the total length where the point should be computed
-* Returns null if ll has less than 2 LatLng, or an object with the following properties:
-*    latLng: the LatLng of the interpolated point
-*    predecessor: the index of the previous vertex on the path
-*    heading: the heading of the path at this point, in degrees
-*/
-function interpolateOnPointPath(pts, ratio) {
-    const nbVertices = pts.length;
-
-    if (nbVertices < 2) {
-        return null;
-    }
-    // easy limit cases: ratio negative/zero => first vertex
-    if (ratio <= 0) {
+    return positionOffsets
+    // 3. projects offsets to segments
+    .map(positionOffset => ({
+        positionOffset,
+        segment: getSegment(segments, positionOffset),
+    }))
+    // 4. interpolate on segment
+    .map(({ positionOffset, segment }) => {
+        const segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
-            pt: pts[0],
-            predecessor: 0,
-            heading: computeAngle(pts[0], pts[1])
+            pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
+            heading: segment.heading,
         };
-    }
-    // ratio >=1 => last vertex
-    if (ratio >= 1) {
-        return {
-            pt: pts[nbVertices - 1],
-            predecessor: nbVertices - 1,
-            heading: computeAngle(pts[nbVertices - 2], pts[nbVertices - 1])
-        };
-    }
-    // 1-segment-only path => direct linear interpolation
-    if (nbVertices == 2) {
-        return {
-            pt: interpolateBetweenPoints(pts[0], pts[1], ratio),
-            predecessor: 0,
-            heading: computeAngle(pts[0], pts[1])
-        };
-    }
-
-    const pathLength = getPointPathPixelLength(pts);
-    let a = pts[0], b = a,
-        ratioA = 0, ratioB = 0,
-        distB = 0;
-    // follow the path segments until we find the one
-    // on which the point must lie => [ab]
-    let i = 1;
-    for (; i < nbVertices && ratioB < ratio; i++) {
-        a = b;
-        ratioA = ratioB;
-        b = pts[i];
-        distB += a.distanceTo(b);
-        ratioB = distB / pathLength;
-    }
-
-    // compute the ratio relative to the segment [ab]
-    const segmentRatio = (ratio - ratioA) / (ratioB - ratioA);
-
-    return {
-        pt: interpolateBetweenPoints(a, b, segmentRatio),
-        predecessor: i-2,
-        heading: computeAngle(a, b)
-    };
+    });
 }
 
 /**
@@ -133,10 +99,10 @@ function interpolateOnPointPath(pts, ratio) {
 * at the given ratio of the distance from A to B, by linear interpolation.
 */
 function interpolateBetweenPoints(ptA, ptB, ratio) {
-    if (ptB.x != ptA.x) {
+    if (ptB.x !== ptA.x) {
         return L.point(
-            (ptA.x * (1 - ratio)) + (ratio * ptB.x),
-            (ptA.y * (1 - ratio)) + (ratio * ptB.y)
+            ptA.x + ratio * (ptB.x - ptA.x),
+            ptA.y + ratio * (ptB.y - ptA.y)
         );
     }
     // special case where points lie on the same vertical axis
