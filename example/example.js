@@ -10,18 +10,13 @@ function init() {
         ]
     });
 
-    // --- Arrow, with animation to demonstrate the use of setPatterns ---
+    // --- Simple arrow ---
     var arrow = L.polyline([[57, -19], [60, -12]], {}).addTo(map);
-    var arrowHead = L.polylineDecorator(arrow).addTo(map);
-
-    var arrowOffset = 0;
-    var anim = window.setInterval(function() {
-        arrowHead.setPatterns([
-            {offset: arrowOffset+'%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
-        ])
-        if(++arrowOffset > 100)
-            arrowOffset = 0;
-    }, 100);
+    var arrowHead = L.polylineDecorator(arrow, {
+        patterns: [
+            {offset: '100%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ]
+    }).addTo(map);
 
     // --- Polygon, with an inner ring ---
     var polygon = L.polygon([[[54, -6], [55, -7], [56, -2], [55, 1], [53, 0]], [[54, -3], [54, -2], [55, -1], [55, -5]]], {color: "#ff7800", weight: 1}).addTo(map);
