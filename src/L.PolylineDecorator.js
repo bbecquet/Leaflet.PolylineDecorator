@@ -1,7 +1,4 @@
-import {
-    getPixelLength,
-    projectPatternOnPath,
-} from './utils.js';
+import { projectPatternOnPath } from './utils.js';
 import './L.Symbol.js';
 
 L.PolylineDecorator = L.FeatureGroup.extend({
@@ -137,10 +134,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         );
     },
 
-    _asRatioToPathLength: function({ value, isInPixels }, totalPathLength) {
-        return isInPixels ? value / totalPathLength : value;
-    },
-
     /**
     * Select pairs of LatLng and heading angle,
     * that define positions and directions of the symbols
@@ -152,14 +145,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             return [];
         }
 
-        const pathPixelLength = getPixelLength(latLngs, this._map);
-        const ratios = {
-            offset: this._asRatioToPathLength(pattern.offset, pathPixelLength),
-            endOffset: this._asRatioToPathLength(pattern.endOffset, pathPixelLength),
-            repeat: this._asRatioToPathLength(pattern.repeat, pathPixelLength),
-        };
-
-        return projectPatternOnPath(latLngs, ratios, this._map);
+        return projectPatternOnPath(latLngs, pattern, this._map);
     },
 
     /**

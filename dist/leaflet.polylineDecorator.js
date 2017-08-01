@@ -4,9 +4,9 @@
 	(factory());
 }(this, (function () { 'use strict';
 
-function computeSegmentHeading(a, b) {
+var computeSegmentHeading = function computeSegmentHeading(a, b) {
     return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90;
-}
+};
 
 var getPointPathPixelLength = function getPointPathPixelLength(pts) {
     return pts.reduce(function (distance, pt, i) {
@@ -14,11 +14,11 @@ var getPointPathPixelLength = function getPointPathPixelLength(pts) {
     }, 0);
 };
 
-function getPixelLength(latLngs, map) {
-    var points = latLngs.map(function (latLng) {
-        return map.project(latLng);
-    });
-    return getPointPathPixelLength(points);
+function asRatioToPathLength(_ref, totalPathLength) {
+    var value = _ref.value,
+        isInPixels = _ref.isInPixels;
+
+    return isInPixels ? value / totalPathLength : value;
 }
 
 /**
@@ -28,10 +28,17 @@ function getPixelLength(latLngs, map) {
 *   repeat: the ratio of the total pixel length between two points of the pattern
 * map: the map, to access the current projection state
 */
-function projectPatternOnPath(latLngs, ratios, map) {
+function projectPatternOnPath(latLngs, pattern, map) {
     var pathAsPoints = latLngs.map(function (latLng) {
         return map.project(latLng);
     });
+    var pathPixelLength = getPointPathPixelLength(pathAsPoints);
+
+    var ratios = {
+        offset: asRatioToPathLength(pattern.offset, pathPixelLength),
+        endOffset: asRatioToPathLength(pattern.endOffset, pathPixelLength),
+        repeat: asRatioToPathLength(pattern.repeat, pathPixelLength)
+    };
 
     return projectPatternOnPointPath(pathAsPoints, ratios).map(function (point) {
         return {
@@ -74,10 +81,10 @@ var getSegment = function getSegment(segments, offset) {
     return matchingSegment || segments[segments.length - 1];
 };
 
-function projectPatternOnPointPath(pts, _ref) {
-    var offset = _ref.offset,
-        endOffset = _ref.endOffset,
-        repeat = _ref.repeat;
+function projectPatternOnPointPath(pts, _ref2) {
+    var offset = _ref2.offset,
+        endOffset = _ref2.endOffset,
+        repeat = _ref2.repeat;
 
     // 1. split the path as segment infos
     var segments = pointsToSegments(pts);
@@ -99,19 +106,9 @@ function projectPatternOnPointPath(pts, _ref) {
         positionOffset += repeatIntervalPixels;
     } while (repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
-    return positionOffsets
     // 3. projects offsets to segments
-    .map(function (positionOffset) {
-        return {
-            positionOffset: positionOffset,
-            segment: getSegment(segments, positionOffset)
-        };
-    })
-    // 4. interpolate on segment
-    .map(function (_ref2) {
-        var positionOffset = _ref2.positionOffset,
-            segment = _ref2.segment;
-
+    return positionOffsets.map(function (positionOffset) {
+        var segment = getSegment(segments, positionOffset);
         var segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
             pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
@@ -436,13 +433,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         });
     },
 
-    _asRatioToPathLength: function _asRatioToPathLength(_ref, totalPathLength) {
-        var value = _ref.value,
-            isInPixels = _ref.isInPixels;
-
-        return isInPixels ? value / totalPathLength : value;
-    },
-
     /**
     * Select pairs of LatLng and heading angle,
     * that define positions and directions of the symbols
@@ -454,14 +444,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             return [];
         }
 
-        var pathPixelLength = getPixelLength(latLngs, this._map);
-        var ratios = {
-            offset: this._asRatioToPathLength(pattern.offset, pathPixelLength),
-            endOffset: this._asRatioToPathLength(pattern.endOffset, pathPixelLength),
-            repeat: this._asRatioToPathLength(pattern.repeat, pathPixelLength)
-        };
-
-        return projectPatternOnPath(latLngs, ratios, this._map);
+        return projectPatternOnPath(latLngs, pattern, this._map);
     },
 
     /**

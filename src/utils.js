@@ -1,26 +1,24 @@
-function computeSegmentHeading(a, b) {
-    return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
-}
+
+const computeSegmentHeading = (a, b) =>
+    (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
 
 const getPointPathPixelLength = pts =>
     pts.reduce((distance, pt, i) => {
         return i === 0 ? 0 : distance + pt.distanceTo(pts[i - 1]);
     }, 0);
 
-function getPixelLength(latLngs, map) {
-    const points = latLngs.map(latLng => map.project(latLng));
-    return getPointPathPixelLength(points);
-}
+const asRatioToPathLength = ({ value, isInPixels }, totalPathLength) =>
+    isInPixels ? value / totalPathLength : value;
 
-/**
-* ratios is an object with the following fields:
-*   offset: the ratio of the total pixel length where the pattern will start
-*   endOffset: the ratio of the total pixel length where the pattern will end
-*   repeat: the ratio of the total pixel length between two points of the pattern
-* map: the map, to access the current projection state
-*/
-function projectPatternOnPath(latLngs, ratios, map) {
+function projectPatternOnPath(latLngs, pattern, map) {
     const pathAsPoints = latLngs.map(latLng => map.project(latLng));
+    const pathPixelLength = getPointPathPixelLength(pathAsPoints);
+
+    const ratios = {
+        offset: asRatioToPathLength(pattern.offset, pathPixelLength),
+        endOffset: asRatioToPathLength(pattern.endOffset, pathPixelLength),
+        repeat: asRatioToPathLength(pattern.repeat, pathPixelLength),
+    };
 
     return projectPatternOnPointPath(pathAsPoints, ratios)
         .map(point => ({
@@ -78,14 +76,9 @@ function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {
         positionOffset += repeatIntervalPixels;
     } while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
-    return positionOffsets
     // 3. projects offsets to segments
-    .map(positionOffset => ({
-        positionOffset,
-        segment: getSegment(segments, positionOffset),
-    }))
-    // 4. interpolate on segment
-    .map(({ positionOffset, segment }) => {
+    return positionOffsets.map(positionOffset => {
+        const segment = getSegment(segments, positionOffset);
         const segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
             pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
@@ -111,5 +104,4 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 
 export {
     projectPatternOnPath,
-    getPixelLength,
 };
