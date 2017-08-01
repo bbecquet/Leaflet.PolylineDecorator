@@ -16,7 +16,6 @@
     "rollup-watch": "^4.3.1"
   },
   "dependencies": {
-    "array.prototype.find": "^2.0.4",
     "leaflet-rotatedmarker": "^0.2.0"
   },
   "license": "MIT",

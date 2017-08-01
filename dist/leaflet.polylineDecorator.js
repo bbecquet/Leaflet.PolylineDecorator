@@ -14,20 +14,12 @@ var getPointPathPixelLength = function getPointPathPixelLength(pts) {
     }, 0);
 };
 
-function asRatioToPathLength(_ref, totalPathLength) {
+var asRatioToPathLength = function asRatioToPathLength(_ref, totalPathLength) {
     var value = _ref.value,
         isInPixels = _ref.isInPixels;
-
     return isInPixels ? value / totalPathLength : value;
-}
+};
 
-/**
-* ratios is an object with the following fields:
-*   offset: the ratio of the total pixel length where the pattern will start
-*   endOffset: the ratio of the total pixel length where the pattern will end
-*   repeat: the ratio of the total pixel length between two points of the pattern
-* map: the map, to access the current projection state
-*/
 function projectPatternOnPath(latLngs, pattern, map) {
     var pathAsPoints = latLngs.map(function (latLng) {
         return map.project(latLng);
@@ -188,6 +180,11 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
+/**
+* Defines several classes of symbol factories,
+* to be used with L.PolylineDecorator
+*/
+
 L.Symbol = L.Symbol || {};
 
 /**
