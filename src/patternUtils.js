@@ -91,6 +91,7 @@ function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {
     } while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
     // 3. projects offsets to segments
+    // @TODO: Optim: Have a single loop read positions and segments at the same time
     return positionOffsets.map(positionOffset => {
         const segment = getSegment(segments, positionOffset);
         const segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
