@@ -1,7 +1,7 @@
 import {
     projectPatternOnPath,
     parseRelativeOrAbsoluteValue,
-} from './utils.js';
+} from './patternUtils.js';
 import './L.Symbol.js';
 
 L.PolylineDecorator = L.FeatureGroup.extend({
