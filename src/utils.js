@@ -48,13 +48,13 @@ function pointsToSegments(pts) {
 
 const getSegment = (segments, offset) => {
     // @TODO: polyfill Array.find
-    let matchingSegment;
-    segments.forEach(segment => {
+    for(let i=0, l=segments.length, segment; i<l; i++) {
+        segment = segments[i];
         if (offset >= segment.distA && offset <= segment.distB) {
-            matchingSegment = segment;
+            return segment;
         }
-    });
-    return matchingSegment || segments[segments.length - 1];
+    }
+    return segments[segments.length - 1];
 }
 
 function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {

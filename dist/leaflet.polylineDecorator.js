@@ -64,13 +64,13 @@ function pointsToSegments(pts) {
 
 var getSegment = function getSegment(segments, offset) {
     // @TODO: polyfill Array.find
-    var matchingSegment = void 0;
-    segments.forEach(function (segment) {
+    for (var i = 0, l = segments.length, segment; i < l; i++) {
+        segment = segments[i];
         if (offset >= segment.distA && offset <= segment.distB) {
-            matchingSegment = segment;
+            return segment;
         }
-    });
-    return matchingSegment || segments[segments.length - 1];
+    }
+    return segments[segments.length - 1];
 };
 
 function projectPatternOnPointPath(pts, _ref2) {
@@ -180,11 +180,6 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
-/**
-* Defines several classes of symbol factories,
-* to be used with L.PolylineDecorator
-*/
-
 L.Symbol = L.Symbol || {};
 
 /**
