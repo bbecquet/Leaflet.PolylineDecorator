@@ -1,4 +1,7 @@
-import { projectPatternOnPath } from './utils.js';
+import {
+    projectPatternOnPath,
+    parseRelativeOrAbsoluteValue,
+} from './utils.js';
 import './L.Symbol.js';
 
 L.PolylineDecorator = L.FeatureGroup.extend({
@@ -85,20 +88,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         this.redraw();
     },
 
-    _parseRelativeOrAbsoluteValue: function(value) {
-        if (typeof value === 'string' && value.indexOf('%') !== -1) {
-            return {
-                value: parseFloat(value) / 100,
-                isInPixels: false,
-            };
-        }
-        const parsedValue = value ? parseFloat(value) : 0;
-        return {
-            value: parsedValue,
-            isInPixels: parsedValue > 0,
-        };
-    },
-
     /**
     * Parse the pattern definition
     */
@@ -107,9 +96,9 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             symbolFactory: patternDef.symbol,
             // Parse offset and repeat values, managing the two cases:
             // absolute (in pixels) or relative (in percentage of the polyline length)
-            offset: this._parseRelativeOrAbsoluteValue(patternDef.offset),
-            endOffset: this._parseRelativeOrAbsoluteValue(patternDef.endOffset),
-            repeat: this._parseRelativeOrAbsoluteValue(patternDef.repeat),
+            offset: parseRelativeOrAbsoluteValue(patternDef.offset),
+            endOffset: parseRelativeOrAbsoluteValue(patternDef.endOffset),
+            repeat: parseRelativeOrAbsoluteValue(patternDef.repeat),
         };
     },
 

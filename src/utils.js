@@ -10,6 +10,20 @@ const getPointPathPixelLength = pts =>
 const asRatioToPathLength = ({ value, isInPixels }, totalPathLength) =>
     isInPixels ? value / totalPathLength : value;
 
+function parseRelativeOrAbsoluteValue(value) {
+    if (typeof value === 'string' && value.indexOf('%') !== -1) {
+        return {
+            value: parseFloat(value) / 100,
+            isInPixels: false,
+        };
+    }
+    const parsedValue = value ? parseFloat(value) : 0;
+    return {
+        value: parsedValue,
+        isInPixels: parsedValue > 0,
+    };
+}
+
 function projectPatternOnPath(latLngs, pattern, map) {
     const pathAsPoints = latLngs.map(latLng => map.project(latLng));
     const pathPixelLength = getPointPathPixelLength(pathAsPoints);
@@ -104,4 +118,5 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 
 export {
     projectPatternOnPath,
+    parseRelativeOrAbsoluteValue,
 };
