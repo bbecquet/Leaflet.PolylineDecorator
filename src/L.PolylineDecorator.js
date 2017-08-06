@@ -167,10 +167,9 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Draw all patterns
     */
     _draw: function () {
-        this._patterns.forEach(pattern => {
-            const layers = this._getPatternLayers(pattern);
-            this.addLayer(L.layerGroup(layers));
-        });
+        this._patterns
+            .map(pattern => this._getPatternLayers(pattern))
+            .forEach(layers => { this.addLayer(L.layerGroup(layers)); });
     }
 });
 /*
