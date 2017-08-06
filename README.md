@@ -75,8 +75,10 @@ var decorator = L.polylineDecorator(polyline, {
 }).addTo(map);
 ```
 
-## Performance note
+## Performance note/alternatives
 
-Please note that this library is in an early stage, and many operations could still be optimized.
-Moreover, as it requires a lot of (re-)computations, and each pattern symbol is an actual `L.ILayer` object, it can have an impact on the responsiveness of your map, especially if used on many objects.
-In cases where it's applicable (dash patterns), you should probably use instead the `dashArray` property of `L.Path`, as it's natively drawn by the browser.
+This plugin creates actual `L.Layer` objects (markers, polyline, etc.) to draw the pattern symbols. This is extra customizable as you can define your own symbols, but it may have an impact on the responsiveness of your map if you have to draw a lot of symbols on many large polylines.
+
+Here are two light-weight alternatives for simpler cases:
+ - the [`dashArray` property of `L.Path`](http://leafletjs.com/reference-1.1.0.html#path-dasharray), f you only need to draw simple patterns (dashes, dots, etc.).
+ - the [`Leaflet.TextPath`](https://github.com/makinacorpus/Leaflet.TextPath) plugin, which is based on SVG.
