@@ -86,7 +86,7 @@ function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {
     return positionOffsets.map(positionOffset => {
         // find the segment matching the offset,
         // starting from the previous one as offsets are ordered
-        while (positionOffset > segment.distA && segmentIndex < nbSegments - 1) {
+        while (positionOffset > segment.distB && segmentIndex < nbSegments - 1) {
             segmentIndex++;
             segment = segments[segmentIndex];
         }
