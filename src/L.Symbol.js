@@ -13,8 +13,6 @@ L.Symbol = L.Symbol || {};
 * Can also be used for dots, if 'pixelSize' option is given the 0 value.
 */
 L.Symbol.Dash = L.Class.extend({
-    isZoomDependant: true,
-
     options: {
         pixelSize: 10,
         pathOptions: { }
@@ -51,8 +49,6 @@ L.Symbol.dash = function (options) {
 };
 
 L.Symbol.ArrowHead = L.Class.extend({
-    isZoomDependant: true,
-
     options: {
         polygon: true,
         pixelSize: 10,
@@ -102,8 +98,6 @@ L.Symbol.arrowHead = function (options) {
 };
 
 L.Symbol.Marker = L.Class.extend({
-    isZoomDependant: false,
-
     options: {
         markerOptions: { },
         rotate: false
@@ -113,7 +107,6 @@ L.Symbol.Marker = L.Class.extend({
         L.Util.setOptions(this, options);
         this.options.markerOptions.clickable = false;
         this.options.markerOptions.draggable = false;
-        this.isZoomDependant = (L.Browser.ie && this.options.rotate);
     },
 
     buildSymbol: function(directionPoint, latLngs, map, index, total) {

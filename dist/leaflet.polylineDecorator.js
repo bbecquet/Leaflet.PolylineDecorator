@@ -113,6 +113,7 @@ function projectPatternOnPointPath(pts, _ref2) {
     } while (repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
     // 3. projects offsets to segments
+    // @TODO: Optim: Have a single loop read positions and segments at the same time
     return positionOffsets.map(function (positionOffset) {
         var segment = getSegment(segments, positionOffset);
         var segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
@@ -194,6 +195,11 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
+/**
+* Defines several classes of symbol factories,
+* to be used with L.PolylineDecorator
+*/
+
 L.Symbol = L.Symbol || {};
 
 /**
@@ -201,8 +207,6 @@ L.Symbol = L.Symbol || {};
 * Can also be used for dots, if 'pixelSize' option is given the 0 value.
 */
 L.Symbol.Dash = L.Class.extend({
-    isZoomDependant: true,
-
     options: {
         pixelSize: 10,
         pathOptions: {}
@@ -236,8 +240,6 @@ L.Symbol.dash = function (options) {
 };
 
 L.Symbol.ArrowHead = L.Class.extend({
-    isZoomDependant: true,
-
     options: {
         polygon: true,
         pixelSize: 10,
@@ -277,8 +279,6 @@ L.Symbol.arrowHead = function (options) {
 };
 
 L.Symbol.Marker = L.Class.extend({
-    isZoomDependant: false,
-
     options: {
         markerOptions: {},
         rotate: false
@@ -288,7 +288,6 @@ L.Symbol.Marker = L.Class.extend({
         L.Util.setOptions(this, options);
         this.options.markerOptions.clickable = false;
         this.options.markerOptions.draggable = false;
-        this.isZoomDependant = L.Browser.ie && this.options.rotate;
     },
 
     buildSymbol: function buildSymbol(directionPoint, latLngs, map, index, total) {
