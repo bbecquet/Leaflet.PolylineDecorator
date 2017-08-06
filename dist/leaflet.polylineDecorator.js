@@ -76,17 +76,6 @@ function pointsToSegments(pts) {
     return segments;
 }
 
-var getSegment = function getSegment(segments, offset) {
-    // @TODO: polyfill Array.find
-    for (var i = 0, l = segments.length, segment; i < l; i++) {
-        segment = segments[i];
-        if (offset >= segment.distA && offset <= segment.distB) {
-            return segment;
-        }
-    }
-    return segments[segments.length - 1];
-};
-
 function projectPatternOnPointPath(pts, _ref2) {
     var offset = _ref2.offset,
         endOffset = _ref2.endOffset,
@@ -94,12 +83,13 @@ function projectPatternOnPointPath(pts, _ref2) {
 
     // 1. split the path as segment infos
     var segments = pointsToSegments(pts);
+    var nbSegments = segments.length;
 
-    if (segments.length === 0) {
+    if (nbSegments === 0) {
         return [];
     }
 
-    var totalPathLength = segments[segments.length - 1].distB;
+    var totalPathLength = segments[nbSegments - 1].distB;
     var repeatIntervalPixels = totalPathLength * repeat;
     var startOffsetPixels = offset > 0 ? totalPathLength * offset : 0;
     var endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
@@ -113,9 +103,16 @@ function projectPatternOnPointPath(pts, _ref2) {
     } while (repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
     // 3. projects offsets to segments
-    // @TODO: Optim: Have a single loop read positions and segments at the same time
+    var segmentIndex = 0;
+    var segment = segments[0];
     return positionOffsets.map(function (positionOffset) {
-        var segment = getSegment(segments, positionOffset);
+        // find the segment matching the offset,
+        // starting from the previous one as offsets are ordered
+        while (positionOffset > segment.distA && segmentIndex < nbSegments - 1) {
+            segmentIndex++;
+            segment = segments[segmentIndex];
+        }
+
         var segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
             pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
@@ -195,11 +192,6 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
-/**
-* Defines several classes of symbol factories,
-* to be used with L.PolylineDecorator
-*/
-
 L.Symbol = L.Symbol || {};
 
 /**

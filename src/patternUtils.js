@@ -60,24 +60,14 @@ function pointsToSegments(pts) {
     return segments;
 }
 
-const getSegment = (segments, offset) => {
-    // @TODO: polyfill Array.find
-    for(let i=0, l=segments.length, segment; i<l; i++) {
-        segment = segments[i];
-        if (offset >= segment.distA && offset <= segment.distB) {
-            return segment;
-        }
-    }
-    return segments[segments.length - 1];
-}
-
 function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {
     // 1. split the path as segment infos
     const segments = pointsToSegments(pts);
+    const nbSegments = segments.length;
 
-    if (segments.length === 0) { return []; }
+    if (nbSegments === 0) { return []; }
 
-    const totalPathLength = segments[segments.length - 1].distB;
+    const totalPathLength = segments[nbSegments - 1].distB;
     const repeatIntervalPixels = totalPathLength * repeat;
     const startOffsetPixels = offset > 0 ? totalPathLength * offset : 0;
     const endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
@@ -91,9 +81,16 @@ function projectPatternOnPointPath(pts, { offset, endOffset, repeat }) {
     } while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
 
     // 3. projects offsets to segments
-    // @TODO: Optim: Have a single loop read positions and segments at the same time
+    let segmentIndex = 0;
+    let segment = segments[0];
     return positionOffsets.map(positionOffset => {
-        const segment = getSegment(segments, positionOffset);
+        // find the segment matching the offset,
+        // starting from the previous one as offsets are ordered
+        while (positionOffset > segment.distA && segmentIndex < nbSegments - 1) {
+            segmentIndex++;
+            segment = segments[segmentIndex];
+        }
+
         const segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
             pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
