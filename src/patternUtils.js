@@ -28,6 +28,8 @@ function projectPatternOnPath(latLngs, pattern, map) {
     const pathAsPoints = latLngs.map(latLng => map.project(latLng));
     const pathPixelLength = getPointPathPixelLength(pathAsPoints);
 
+    if (pathPixelLength === 0) { return []; }
+
     const ratios = {
         offset: asRatioToPathLength(pattern.offset, pathPixelLength),
         endOffset: asRatioToPathLength(pattern.endOffset, pathPixelLength),

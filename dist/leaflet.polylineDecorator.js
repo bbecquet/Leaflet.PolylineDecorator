@@ -40,6 +40,10 @@ function projectPatternOnPath(latLngs, pattern, map) {
     });
     var pathPixelLength = getPointPathPixelLength(pathAsPoints);
 
+    if (pathPixelLength === 0) {
+        return [];
+    }
+
     var ratios = {
         offset: asRatioToPathLength(pattern.offset, pathPixelLength),
         endOffset: asRatioToPathLength(pattern.endOffset, pathPixelLength),
