@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c -w",
-    "test": "ava tests"
+    "test": "ava tests -v",
+    "test:watch": "ava tests -v -w"
   },
   "devDependencies": {
     "ava": "^0.21.0",

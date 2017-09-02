@@ -1,6 +1,6 @@
 
 const computeSegmentHeading = (a, b) =>
-    (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90;
+    ((Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) + 90 + 360) % 360;
 
 const getPointPathPixelLength = pts =>
     pts.reduce((distance, pt, i) => {
@@ -117,6 +117,8 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 }
 
 export {
+    computeSegmentHeading,
+    asRatioToPathLength,
     projectPatternOnPath,
     parseRelativeOrAbsoluteValue,
 };

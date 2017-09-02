@@ -5,7 +5,7 @@
 }(this, (function () { 'use strict';
 
 var computeSegmentHeading = function computeSegmentHeading(a, b) {
-    return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90;
+    return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90 + 360) % 360;
 };
 
 var getPointPathPixelLength = function getPointPathPixelLength(pts) {
@@ -196,6 +196,11 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 })();
 
 // enable rotationAngle and rotationOrigin support on L.Marker
+/**
+* Defines several classes of symbol factories,
+* to be used with L.PolylineDecorator
+*/
+
 L.Symbol = L.Symbol || {};
 
 /**
