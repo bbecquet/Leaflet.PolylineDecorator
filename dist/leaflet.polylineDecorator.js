@@ -4,14 +4,16 @@
 	(factory());
 }(this, (function () { 'use strict';
 
+// functional re-impl of L.Point.distanceTo,
+// with no dependency on Leaflet for easier testing
+function pointDistance(ptA, ptB) {
+    var x = ptB.x - ptA.x;
+    var y = ptB.y - ptA.y;
+    return Math.sqrt(x * x + y * y);
+}
+
 var computeSegmentHeading = function computeSegmentHeading(a, b) {
     return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90 + 360) % 360;
-};
-
-var getPointPathPixelLength = function getPointPathPixelLength(pts) {
-    return pts.reduce(function (distance, pt, i) {
-        return i === 0 ? 0 : distance + pt.distanceTo(pts[i - 1]);
-    }, 0);
 };
 
 var asRatioToPathLength = function asRatioToPathLength(_ref, totalPathLength) {
@@ -38,21 +40,9 @@ function projectPatternOnPath(latLngs, pattern, map) {
     var pathAsPoints = latLngs.map(function (latLng) {
         return map.project(latLng);
     });
-    var pathPixelLength = getPointPathPixelLength(pathAsPoints);
-
-    if (pathPixelLength === 0) {
-        return [];
-    }
-
-    var ratios = {
-        offset: asRatioToPathLength(pattern.offset, pathPixelLength),
-        endOffset: asRatioToPathLength(pattern.endOffset, pathPixelLength),
-        repeat: asRatioToPathLength(pattern.repeat, pathPixelLength)
-    };
-
-    return projectPatternOnPointPath(pathAsPoints, ratios).map(function (point) {
+    return projectPatternOnPointPath(pathAsPoints, pattern).map(function (point) {
         return {
-            latLng: map.unproject(point.pt),
+            latLng: map.unproject(L.point(point.pt)),
             heading: point.heading
         };
     });
@@ -67,7 +57,7 @@ function pointsToSegments(pts) {
     for (var i = 1, l = pts.length; i < l; i++) {
         a = pts[i - 1];
         b = pts[i];
-        distAB = a.distanceTo(b);
+        distAB = pointDistance(a, b);
         segments.push({
             a: a,
             b: b,
@@ -80,25 +70,28 @@ function pointsToSegments(pts) {
     return segments;
 }
 
-function projectPatternOnPointPath(pts, _ref2) {
-    var offset = _ref2.offset,
-        endOffset = _ref2.endOffset,
-        repeat = _ref2.repeat;
-
+function projectPatternOnPointPath(pts, pattern) {
     // 1. split the path as segment infos
     var segments = pointsToSegments(pts);
     var nbSegments = segments.length;
-
     if (nbSegments === 0) {
         return [];
     }
 
     var totalPathLength = segments[nbSegments - 1].distB;
+    if (totalPathLength === 0) {
+        return [];
+    }
+
+    var offset = asRatioToPathLength(pattern.offset, totalPathLength);
+    var endOffset = asRatioToPathLength(pattern.endOffset, totalPathLength);
+    var repeat = asRatioToPathLength(pattern.repeat, totalPathLength);
+
     var repeatIntervalPixels = totalPathLength * repeat;
     var startOffsetPixels = offset > 0 ? totalPathLength * offset : 0;
     var endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
 
-    // 2. generate the positions of the pattern as offsets from the polygon start
+    // 2. generate the positions of the pattern as offsets from the path start
     var positionOffsets = [];
     var positionOffset = startOffsetPixels;
     do {
@@ -131,10 +124,16 @@ function projectPatternOnPointPath(pts, _ref2) {
 */
 function interpolateBetweenPoints(ptA, ptB, ratio) {
     if (ptB.x !== ptA.x) {
-        return L.point(ptA.x + ratio * (ptB.x - ptA.x), ptA.y + ratio * (ptB.y - ptA.y));
+        return {
+            x: ptA.x + ratio * (ptB.x - ptA.x),
+            y: ptA.y + ratio * (ptB.y - ptA.y)
+        };
     }
     // special case where points lie on the same vertical axis
-    return L.point(ptA.x, ptA.y + (ptB.y - ptA.y) * ratio);
+    return {
+        x: ptA.x,
+        y: ptA.y + (ptB.y - ptA.y) * ratio
+    };
 }
 
 (function() {
