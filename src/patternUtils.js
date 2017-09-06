@@ -118,8 +118,10 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 }
 
 export {
-    computeSegmentHeading,
-    asRatioToPathLength,
     projectPatternOnPath,
     parseRelativeOrAbsoluteValue,
+    // the following function are exported only for unit testing purpose
+    computeSegmentHeading,
+    asRatioToPathLength,
+    projectPatternOnPointPath,
 };
