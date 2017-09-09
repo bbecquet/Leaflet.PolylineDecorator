@@ -83,3 +83,18 @@ test('does not repeat positions beyond the end offset', t => {
 	const positions = projectPatternOnPointPath([A, B], pattern3Repeat);
 	t.is(positions.length, 3);
 });
+
+test('ignores empty segments', t => {
+	t.deepEqual(
+		projectPatternOnPointPath([A, A, B, B, B, C, D, D, D], patternStart),
+		projectPatternOnPointPath([A, B, C, D], patternStart)
+	);
+	t.deepEqual(
+		projectPatternOnPointPath([A, A, B, B, B, C, D, D, D], patternQuarter),
+		projectPatternOnPointPath([A, B, C, D], patternQuarter)
+	);
+	t.deepEqual(
+		projectPatternOnPointPath([A, A, B, B, B, C, D, D, D], pattern3Repeat),
+		projectPatternOnPointPath([A, B, C, D], pattern3Repeat)
+	);
+});

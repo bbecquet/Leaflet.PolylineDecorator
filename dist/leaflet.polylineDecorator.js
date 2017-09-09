@@ -48,30 +48,31 @@ function projectPatternOnPath(latLngs, pattern, map) {
     });
 }
 
+var pointsEqual = function pointsEqual(a, b) {
+    return a.x === b.x && a.y === b.y;
+};
+
 function pointsToSegments(pts) {
-    var segments = [];
-    var a = void 0,
-        b = void 0,
-        distA = 0,
-        distAB = void 0;
-    for (var i = 1, l = pts.length; i < l; i++) {
-        a = pts[i - 1];
-        b = pts[i];
-        distAB = pointDistance(a, b);
-        segments.push({
-            a: a,
-            b: b,
-            distA: distA, // distances from the start of the polyline
-            distB: distA + distAB,
-            heading: computeSegmentHeading(a, b)
-        });
-        distA += distAB;
-    }
-    return segments;
+    return pts.reduce(function (segments, b, idx, points) {
+        // this test skips same adjacent points
+        if (idx > 0 && !pointsEqual(b, points[idx - 1])) {
+            var a = points[idx - 1];
+            var distA = segments.length > 0 ? segments[segments.length - 1].distB : 0;
+            var distAB = pointDistance(a, b);
+            segments.push({
+                a: a,
+                b: b,
+                distA: distA,
+                distB: distA + distAB,
+                heading: computeSegmentHeading(a, b)
+            });
+        }
+        return segments;
+    }, []);
 }
 
 function projectPatternOnPointPath(pts, pattern) {
-    // 1. split the path as segment infos
+    // 1. split the path into segment infos
     var segments = pointsToSegments(pts);
     var nbSegments = segments.length;
     if (nbSegments === 0) {
@@ -79,9 +80,6 @@ function projectPatternOnPointPath(pts, pattern) {
     }
 
     var totalPathLength = segments[nbSegments - 1].distB;
-    if (totalPathLength === 0) {
-        return [];
-    }
 
     var offset = asRatioToPathLength(pattern.offset, totalPathLength);
     var endOffset = asRatioToPathLength(pattern.endOffset, totalPathLength);
