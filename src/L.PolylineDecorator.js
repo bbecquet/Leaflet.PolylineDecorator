@@ -29,7 +29,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         } else if (L.Util.isArray(p) && p.length > 0) {
             if (p[0] instanceof L.Polyline) {
                 p.forEach(singleP => {
-                    this._initPath(singleP, (single instanceof L.Polygon));
+                    this._initPath(singleP, (singleP instanceof L.Polygon));
                 });
             } else {
                 this._initPath(p);
