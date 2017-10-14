@@ -13,28 +13,32 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         L.FeatureGroup.prototype.initialize.call(this);
         L.Util.setOptions(this, options);
         this._map = null;
-        this._initPaths(paths);
+        this._paths = this._initPaths(paths);
         this._initPatterns();
     },
 
     /**
-    * Deals with all the different cases. p can be one of these types:
+    * Deals with all the different cases. input can be one of these types:
     * array of LatLng, array of 2-number arrays, Polyline, Polygon,
     * array of one of the previous.
     */
-    _initPaths: function(p) {
-        this._paths = [];
-        if (p instanceof L.Polyline) {
-            this._initPath(p.getLatLngs(), (p instanceof L.Polygon));
-        } else if (L.Util.isArray(p) && p.length > 0) {
-            if (p[0] instanceof L.Polyline) {
-                p.forEach(singleP => {
-                    this._initPath(singleP, (singleP instanceof L.Polygon));
-                });
-            } else {
-                this._initPath(p);
-            }
+    _initPaths: function(input, isPolygon) {
+        if (this._isCoordArray(input)) {
+            // Leaflet Polygons don't need the first point to be repeated, but we do
+            const coords = isPolygon ? input.concat([input[0]]) : input;
+            return [coords];
         }
+        if (input instanceof L.Polyline) {
+            // we need some recursivity to support multi-poly*
+            return this._initPaths(input.getLatLngs(), (input instanceof L.Polygon));
+        }
+        if (L.Util.isArray(input)) {
+            // flatten everything, we just need coordinate lists to apply patterns
+            return input.reduce((flatArray, p) =>
+                flatArray.concat(this._initPaths(p, isPolygon)),
+            []);
+        }
+        return [];
     },
 
     _isCoordArray: function(ll) {
@@ -42,21 +46,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             ll[0] instanceof L.LatLng ||
             (L.Util.isArray(ll[0]) && ll[0].length == 2 && typeof ll[0][0] === 'number')
         ));
-    },
-
-    _initPath: function(path, isPolygon) {
-        // It may still be an array of array of coordinates
-        // (ex: polygon with rings)
-        const latLngs = this._isCoordArray(path) ? [path] : path;
-
-        for(let i=0; i<latLngs.length; i++) {
-            // As of Leaflet >= v0.6, last polygon vertex (=first) isn't repeated.
-            // Our algorithm needs it, so we add it back explicitly.
-            if (isPolygon) {
-                latLngs[i].push(latLngs[i][0]);
-            }
-            this._paths.push(latLngs[i]);
-        }
     },
 
     _initPatterns: function() {
@@ -84,7 +73,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * and redraws the new one.
     */
     setPaths: function(paths) {
-        this._initPaths(paths);
+        this._paths = this._initPaths(paths);
         this.redraw();
     },
 
