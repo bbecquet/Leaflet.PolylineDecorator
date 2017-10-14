@@ -14,7 +14,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         L.Util.setOptions(this, options);
         this._map = null;
         this._paths = this._initPaths(paths);
-        this._initPatterns();
+        this._patterns = this._initPatterns(this.options.patterns);
     },
 
     /**
@@ -48,14 +48,9 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         ));
     },
 
-    _initPatterns: function() {
-        this._patterns = [];
-        let pattern;
-        // parse pattern definitions and precompute some values
-        this.options.patterns.forEach(patternDef => {
-            pattern = this._parsePatternDef(patternDef);
-            this._patterns.push(pattern);
-        });
+    // parse pattern definitions and precompute some values
+    _initPatterns: function(patternDefs) {
+        return patternDefs.map(this._parsePatternDef);
     },
 
     /**
@@ -64,7 +59,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     setPatterns: function(patterns) {
         this.options.patterns = patterns;
-        this._initPatterns();
+        this._patterns = _initPatterns(this.options.patterns);
         this.redraw();
     },
 

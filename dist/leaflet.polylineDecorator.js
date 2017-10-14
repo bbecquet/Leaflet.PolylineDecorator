@@ -305,7 +305,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         L.Util.setOptions(this, options);
         this._map = null;
         this._paths = this._initPaths(paths);
-        this._initPatterns();
+        this._patterns = this._initPatterns(this.options.patterns);
     },
 
     /**
@@ -338,16 +338,9 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         return L.Util.isArray(ll) && ll.length > 0 && (ll[0] instanceof L.LatLng || L.Util.isArray(ll[0]) && ll[0].length == 2 && typeof ll[0][0] === 'number');
     },
 
-    _initPatterns: function _initPatterns() {
-        var _this2 = this;
-
-        this._patterns = [];
-        var pattern = void 0;
-        // parse pattern definitions and precompute some values
-        this.options.patterns.forEach(function (patternDef) {
-            pattern = _this2._parsePatternDef(patternDef);
-            _this2._patterns.push(pattern);
-        });
+    // parse pattern definitions and precompute some values
+    _initPatterns: function _initPatterns(patternDefs) {
+        return patternDefs.map(this._parsePatternDef);
     },
 
     /**
@@ -356,7 +349,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     setPatterns: function setPatterns(patterns) {
         this.options.patterns = patterns;
-        this._initPatterns();
+        this._patterns = _initPatterns(this.options.patterns);
         this.redraw();
     },
 
@@ -399,10 +392,10 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Returns an array of ILayers object
     */
     _buildSymbols: function _buildSymbols(latLngs, symbolFactory, directionPoints) {
-        var _this3 = this;
+        var _this2 = this;
 
         return directionPoints.map(function (directionPoint, i) {
-            return symbolFactory.buildSymbol(directionPoint, latLngs, _this3._map, i, directionPoints.length);
+            return symbolFactory.buildSymbol(directionPoint, latLngs, _this2._map, i, directionPoints.length);
         });
     },
 
@@ -435,19 +428,19 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Returns all symbols for a given pattern as an array of LayerGroup
     */
     _getPatternLayers: function _getPatternLayers(pattern) {
-        var _this4 = this;
+        var _this3 = this;
 
         var directionPoints = void 0,
             symbols = void 0;
         var mapBounds = this._map.getBounds().pad(0.1);
         return this._paths.map(function (path, i) {
-            directionPoints = _this4._getDirectionPoints(i, pattern)
+            directionPoints = _this3._getDirectionPoints(i, pattern)
             // filter out invisible points
             .filter(function (point) {
                 return mapBounds.contains(point.latLng);
             });
 
-            return L.layerGroup(_this4._buildSymbols(path, pattern.symbolFactory, directionPoints));
+            return L.layerGroup(_this3._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },
 
@@ -455,12 +448,12 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Draw all patterns
     */
     _draw: function _draw() {
-        var _this5 = this;
+        var _this4 = this;
 
         this._patterns.map(function (pattern) {
-            return _this5._getPatternLayers(pattern);
+            return _this4._getPatternLayers(pattern);
         }).forEach(function (layers) {
-            _this5.addLayer(L.layerGroup(layers));
+            _this4.addLayer(L.layerGroup(layers));
         });
     }
 });
