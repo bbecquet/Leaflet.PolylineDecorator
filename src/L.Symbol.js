@@ -1,5 +1,6 @@
+import L from 'leaflet';
 // enable rotationAngle and rotationOrigin support on L.Marker
-﻿import 'leaflet-rotatedmarker';
+import 'leaflet-rotatedmarker';
 
 /**
 * Defines several classes of symbol factories,

@@ -1,4 +1,3 @@
-
 // functional re-impl of L.Point.distanceTo,
 // with no dependency on Leaflet for easier testing
 function pointDistance(ptA, ptB) {
@@ -25,15 +24,6 @@ function parseRelativeOrAbsoluteValue(value) {
         value: parsedValue,
         isInPixels: parsedValue > 0,
     };
-}
-
-function projectPatternOnPath(latLngs, pattern, map) {
-    const pathAsPoints = latLngs.map(latLng => map.project(latLng));
-    return projectPatternOnPointPath(pathAsPoints, pattern)
-        .map(point => ({
-            latLng: map.unproject(L.point(point.pt)),
-            heading: point.heading,
-        }));
 }
 
 const pointsEqual = (a, b) => a.x === b.x && a.y === b.y;
@@ -119,10 +109,9 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
 }
 
 export {
-    projectPatternOnPath,
+    projectPatternOnPointPath,
     parseRelativeOrAbsoluteValue,
     // the following function are exported only for unit testing purpose
     computeSegmentHeading,
     asRatioToPathLength,
-    projectPatternOnPointPath,
 };

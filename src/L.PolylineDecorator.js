@@ -1,5 +1,6 @@
+import L from 'leaflet';
 import {
-    projectPatternOnPath,
+    projectPatternOnPointPath,
     parseRelativeOrAbsoluteValue,
 } from './patternUtils.js';
 import './L.Symbol.js';
@@ -109,6 +110,15 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         );
     },
 
+    _projectPatternOnPath: function (latLngs, pattern, map) {
+        const pathAsPoints = latLngs.map(latLng => map.project(latLng));
+        return projectPatternOnPointPath(pathAsPoints, pattern)
+            .map(point => ({
+                latLng: map.unproject(L.point(point.pt)),
+                heading: point.heading,
+            }));
+    },
+
     /**
     * Select pairs of LatLng and heading angle,
     * that define positions and directions of the symbols
@@ -120,7 +130,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             return [];
         }
 
-        return projectPatternOnPath(latLngs, pattern, this._map);
+        return this._projectPatternOnPath(latLngs, pattern, this._map);
     },
 
     /**

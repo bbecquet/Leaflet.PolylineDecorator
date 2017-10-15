@@ -5,6 +5,10 @@ export default {
   entry: 'src/L.PolylineDecorator.js',
   dest: 'dist/leaflet.polylineDecorator.js',
   format: 'umd',
+  external: ['leaflet'],
+  globals: {
+    leaflet: 'L'
+  },
   plugins: [
     resolve(),
     babel({
