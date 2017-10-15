@@ -32,7 +32,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             // we need some recursivity to support multi-poly*
             return this._initPaths(input.getLatLngs(), (input instanceof L.Polygon));
         }
-        if (L.Util.isArray(input)) {
+        if (Array.isArray(input)) {
             // flatten everything, we just need coordinate lists to apply patterns
             return input.reduce((flatArray, p) =>
                 flatArray.concat(this._initPaths(p, isPolygon)),
@@ -42,10 +42,12 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     },
 
     _isCoordArray: function(ll) {
-        return (L.Util.isArray(ll) && ll.length > 0 && (
-            ll[0] instanceof L.LatLng ||
-            (L.Util.isArray(ll[0]) && ll[0].length == 2 && typeof ll[0][0] === 'number')
-        ));
+        return Array.isArray(ll) && this._isCoord(ll[0]);
+    },
+
+    _isCoord: function(c) {
+        return c instanceof L.LatLng
+            || (Array.isArray(c) && c.length === 2 && typeof c[0] === 'number');
     },
 
     // parse pattern definitions and precompute some values
