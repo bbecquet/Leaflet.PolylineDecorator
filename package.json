@@ -1,6 +1,6 @@
 {
   "name": "leaflet-polylinedecorator",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "repository": "bbecquet/Leaflet.PolylineDecorator",
   "main": "./dist/leaflet.polylineDecorator.js",
   "scripts": {
