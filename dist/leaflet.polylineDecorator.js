@@ -348,7 +348,7 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     */
     setPatterns: function setPatterns(patterns) {
         this.options.patterns = patterns;
-        this._patterns = _initPatterns(this.options.patterns);
+        this._patterns = this._initPatterns(this.options.patterns);
         this.redraw();
     },
 
