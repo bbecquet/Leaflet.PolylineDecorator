@@ -62,7 +62,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     setPatterns: function(patterns) {
         this.options.patterns = patterns;
-        this._patterns = _initPatterns(this.options.patterns);
+        this._patterns = this._initPatterns(this.options.patterns);
         this.redraw();
     },
 
