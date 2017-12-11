@@ -1,6 +1,6 @@
 {
   "name": "leaflet-polylinedecorator",
-  "main": "leaflet.polylineDecorator.js",
+  "main": "dist/leaflet.polylineDecorator.js",
   "version": "1.5.1",
   "authors": [
     "Benjamin Becquet"
