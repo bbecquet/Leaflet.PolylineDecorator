@@ -182,12 +182,6 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
     });
 })();
 
-// enable rotationAngle and rotationOrigin support on L.Marker
-/**
-* Defines several classes of symbol factories,
-* to be used with L.PolylineDecorator
-*/
-
 L$1.Symbol = L$1.Symbol || {};
 
 /**
@@ -441,16 +435,13 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     _getPatternLayers: function _getPatternLayers(pattern) {
         var _this3 = this;
 
-        var directionPoints = void 0,
-            symbols = void 0;
         var mapBounds = this._map.getBounds().pad(0.1);
         return this._paths.map(function (path, i) {
-            directionPoints = _this3._getDirectionPoints(i, pattern)
+            var directionPoints = _this3._getDirectionPoints(i, pattern)
             // filter out invisible points
             .filter(function (point) {
                 return mapBounds.contains(point.latLng);
             });
-
             return L$1.layerGroup(_this3._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },

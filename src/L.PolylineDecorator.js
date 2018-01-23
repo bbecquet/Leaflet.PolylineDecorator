@@ -148,13 +148,11 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * Returns all symbols for a given pattern as an array of LayerGroup
     */
     _getPatternLayers: function(pattern) {
-        let directionPoints, symbols;
         const mapBounds = this._map.getBounds().pad(0.1);
         return this._paths.map((path, i) => {
-            directionPoints = this._getDirectionPoints(i, pattern)
+            const directionPoints = this._getDirectionPoints(i, pattern)
                 // filter out invisible points
                 .filter(point => mapBounds.contains(point.latLng));
-
             return L.layerGroup(this._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },
