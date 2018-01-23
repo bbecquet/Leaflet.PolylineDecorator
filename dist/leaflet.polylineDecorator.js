@@ -378,7 +378,7 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     onRemove: function onRemove(map) {
         this._map.off('moveend', this.redraw, this);
         this._map = null;
-        L$1.LayerGroup.prototype.onRemove.call(this, map);
+        L$1.FeatureGroup.prototype.onRemove.call(this, map);
     },
 
     /**
@@ -430,7 +430,7 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     },
 
     /**
-    * Returns all symbols for a given pattern as an array of LayerGroup
+    * Returns all symbols for a given pattern as an array of FeatureGroup
     */
     _getPatternLayers: function _getPatternLayers(pattern) {
         var _this3 = this;
@@ -442,7 +442,7 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
             .filter(function (point) {
                 return mapBounds.contains(point.latLng);
             });
-            return L$1.layerGroup(_this3._buildSymbols(path, pattern.symbolFactory, directionPoints));
+            return L$1.featureGroup(_this3._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },
 
@@ -455,7 +455,7 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
         this._patterns.map(function (pattern) {
             return _this4._getPatternLayers(pattern);
         }).forEach(function (layers) {
-            _this4.addLayer(L$1.layerGroup(layers));
+            _this4.addLayer(L$1.featureGroup(layers));
         });
     }
 });
