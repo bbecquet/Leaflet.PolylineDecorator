@@ -15,6 +15,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         L.Util.setOptions(this, options);
         this._map = null;
         this._paths = this._initPaths(paths);
+        this._bounds = this._initBounds();
         this._patterns = this._initPatterns(this.options.patterns);
     },
 
@@ -72,6 +73,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     setPaths: function(paths) {
         this._paths = this._initPaths(paths);
+        this._bounds = this._initBounds();
         this.redraw();
     },
 
@@ -99,6 +101,19 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         this._map.off('moveend', this.redraw, this);
         this._map = null;
         L.FeatureGroup.prototype.onRemove.call(this, map);
+    },
+
+    /**
+    * As real pattern bounds depends on map zoom and bounds,
+    * we just compute the total bounds of all paths decorated by this instance.
+    */
+    _initBounds: function() {
+        const allPathCoords = this._paths.reduce((acc, path) => acc.concat(path), []);
+        return L.latLngBounds(allPathCoords);
+    },
+
+    getBounds: function() {
+        return this._bounds;
     },
 
     /**
