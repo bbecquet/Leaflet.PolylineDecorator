@@ -409,30 +409,25 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
         });
     },
 
-    _projectPatternOnPath: function _projectPatternOnPath(latLngs, pattern, map) {
-        var pathAsPoints = latLngs.map(function (latLng) {
-            return map.project(latLng);
-        });
-        return projectPatternOnPointPath(pathAsPoints, pattern).map(function (point) {
-            return {
-                latLng: map.unproject(L$1.point(point.pt)),
-                heading: point.heading
-            };
-        });
-    },
-
     /**
-    * Select pairs of LatLng and heading angle,
-    * that define positions and directions of the symbols
-    * on the path
+    * Compute pairs of LatLng and heading angle,
+    * that define positions and directions of the symbols on the path
     */
-    _getDirectionPoints: function _getDirectionPoints(pathIndex, pattern) {
-        var latLngs = this._paths[pathIndex];
+    _getDirectionPoints: function _getDirectionPoints(latLngs, pattern) {
+        var _this3 = this;
+
         if (latLngs.length < 2) {
             return [];
         }
-
-        return this._projectPatternOnPath(latLngs, pattern, this._map);
+        var pathAsPoints = latLngs.map(function (latLng) {
+            return _this3._map.project(latLng);
+        });
+        return projectPatternOnPointPath(pathAsPoints, pattern).map(function (point) {
+            return {
+                latLng: _this3._map.unproject(L$1.point(point.pt)),
+                heading: point.heading
+            };
+        });
     },
 
     /**
@@ -450,16 +445,16 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     * Returns all symbols for a given pattern as an array of FeatureGroup
     */
     _getPatternLayers: function _getPatternLayers(pattern) {
-        var _this3 = this;
+        var _this4 = this;
 
         var mapBounds = this._map.getBounds().pad(0.1);
-        return this._paths.map(function (path, i) {
-            var directionPoints = _this3._getDirectionPoints(i, pattern)
+        return this._paths.map(function (path) {
+            var directionPoints = _this4._getDirectionPoints(path, pattern)
             // filter out invisible points
             .filter(function (point) {
                 return mapBounds.contains(point.latLng);
             });
-            return L$1.featureGroup(_this3._buildSymbols(path, pattern.symbolFactory, directionPoints));
+            return L$1.featureGroup(_this4._buildSymbols(path, pattern.symbolFactory, directionPoints));
         });
     },
 
@@ -467,12 +462,12 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     * Draw all patterns
     */
     _draw: function _draw() {
-        var _this4 = this;
+        var _this5 = this;
 
         this._patterns.map(function (pattern) {
-            return _this4._getPatternLayers(pattern);
+            return _this5._getPatternLayers(pattern);
         }).forEach(function (layers) {
-            _this4.addLayer(L$1.featureGroup(layers));
+            _this5.addLayer(L$1.featureGroup(layers));
         });
     }
 });

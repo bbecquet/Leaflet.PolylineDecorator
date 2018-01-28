@@ -125,27 +125,20 @@ L.PolylineDecorator = L.FeatureGroup.extend({
         );
     },
 
-    _projectPatternOnPath: function (latLngs, pattern, map) {
-        const pathAsPoints = latLngs.map(latLng => map.project(latLng));
-        return projectPatternOnPointPath(pathAsPoints, pattern)
-            .map(point => ({
-                latLng: map.unproject(L.point(point.pt)),
-                heading: point.heading,
-            }));
-    },
-
     /**
-    * Select pairs of LatLng and heading angle,
-    * that define positions and directions of the symbols
-    * on the path
+    * Compute pairs of LatLng and heading angle,
+    * that define positions and directions of the symbols on the path
     */
-    _getDirectionPoints: function(pathIndex, pattern) {
-        const latLngs = this._paths[pathIndex];
+    _getDirectionPoints: function(latLngs, pattern) {
         if (latLngs.length < 2) {
             return [];
         }
-
-        return this._projectPatternOnPath(latLngs, pattern, this._map);
+        const pathAsPoints = latLngs.map(latLng => this._map.project(latLng));
+        return projectPatternOnPointPath(pathAsPoints, pattern)
+            .map(point => ({
+                latLng: this._map.unproject(L.point(point.pt)),
+                heading: point.heading,
+            }));
     },
 
     /**
@@ -164,8 +157,8 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     */
     _getPatternLayers: function(pattern) {
         const mapBounds = this._map.getBounds().pad(0.1);
-        return this._paths.map((path, i) => {
-            const directionPoints = this._getDirectionPoints(i, pattern)
+        return this._paths.map(path => {
+            const directionPoints = this._getDirectionPoints(path, pattern)
                 // filter out invisible points
                 .filter(point => mapBounds.contains(point.latLng));
             return L.featureGroup(this._buildSymbols(path, pattern.symbolFactory, directionPoints));
