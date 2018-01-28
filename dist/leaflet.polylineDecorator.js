@@ -430,9 +430,6 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
         });
     },
 
-    /**
-    * Public redraw, invalidating the cache.
-    */
     redraw: function redraw() {
         if (!this._map) {
             return;
