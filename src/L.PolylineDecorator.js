@@ -5,6 +5,12 @@ import {
 } from './patternUtils.js';
 import './L.Symbol.js';
 
+const isCoord = c =>
+    (c instanceof L.LatLng) ||
+    (Array.isArray(c) && c.length === 2 && typeof c[0] === 'number');
+
+const isCoordArray = ll => Array.isArray(ll) && isCoord(ll[0]);
+
 L.PolylineDecorator = L.FeatureGroup.extend({
     options: {
         patterns: []
@@ -25,7 +31,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
     * array of one of the previous.
     */
     _initPaths: function(input, isPolygon) {
-        if (this._isCoordArray(input)) {
+        if (isCoordArray(input)) {
             // Leaflet Polygons don't need the first point to be repeated, but we do
             const coords = isPolygon ? input.concat([input[0]]) : input;
             return [coords];
@@ -41,15 +47,6 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             []);
         }
         return [];
-    },
-
-    _isCoordArray: function(ll) {
-        return Array.isArray(ll) && this._isCoord(ll[0]);
-    },
-
-    _isCoord: function(c) {
-        return c instanceof L.LatLng
-            || (Array.isArray(c) && c.length === 2 && typeof c[0] === 'number');
     },
 
     // parse pattern definitions and precompute some values

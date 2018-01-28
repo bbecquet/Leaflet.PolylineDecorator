@@ -284,6 +284,14 @@ L$1.Symbol.marker = function (options) {
     return new L$1.Symbol.Marker(options);
 };
 
+var isCoord = function isCoord(c) {
+    return c instanceof L$1.LatLng || Array.isArray(c) && c.length === 2 && typeof c[0] === 'number';
+};
+
+var isCoordArray = function isCoordArray(ll) {
+    return Array.isArray(ll) && isCoord(ll[0]);
+};
+
 L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     options: {
         patterns: []
@@ -306,7 +314,7 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
     _initPaths: function _initPaths(input, isPolygon) {
         var _this = this;
 
-        if (this._isCoordArray(input)) {
+        if (isCoordArray(input)) {
             // Leaflet Polygons don't need the first point to be repeated, but we do
             var coords = isPolygon ? input.concat([input[0]]) : input;
             return [coords];
@@ -322,14 +330,6 @@ L$1.PolylineDecorator = L$1.FeatureGroup.extend({
             }, []);
         }
         return [];
-    },
-
-    _isCoordArray: function _isCoordArray(ll) {
-        return Array.isArray(ll) && this._isCoord(ll[0]);
-    },
-
-    _isCoord: function _isCoord(c) {
-        return c instanceof L$1.LatLng || Array.isArray(c) && c.length === 2 && typeof c[0] === 'number';
     },
 
     // parse pattern definitions and precompute some values
