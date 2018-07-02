@@ -55,6 +55,13 @@ function projectPatternOnPointPath(pts, pattern) {
 
     const totalPathLength = segments[nbSegments - 1].distB;
 
+    if (
+        totalPathLength < pattern.offset.value ||
+        totalPathLength < pattern.symbolFactory.options.pixelSize
+    ) {
+        return [];
+    }
+
     const offset = asRatioToPathLength(pattern.offset, totalPathLength);
     const endOffset = asRatioToPathLength(pattern.endOffset, totalPathLength);
     const repeat = asRatioToPathLength(pattern.repeat, totalPathLength);
