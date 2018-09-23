@@ -54,6 +54,7 @@ L.Symbol.ArrowHead = L.Class.extend({
         polygon: true,
         pixelSize: 10,
         headAngle: 60,
+        angleCorrection: 0,
         pathOptions: {
             stroke: false,
             weight: 2
@@ -74,7 +75,7 @@ L.Symbol.ArrowHead = L.Class.extend({
     _buildArrowPath: function (dirPoint, map) {
         const d2r = Math.PI / 180;
         const tipPoint = map.project(dirPoint.latLng);
-        const direction = (-(dirPoint.heading - 90)) * d2r;
+        const direction = (-(dirPoint.heading - 90 + this.options.angleCorrection)) * d2r;
         const radianArrowAngle = this.options.headAngle / 2 * d2r;
 
         const headAngle1 = direction + radianArrowAngle;
