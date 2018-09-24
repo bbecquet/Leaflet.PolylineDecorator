@@ -76,4 +76,14 @@ function init() {
             {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0}})}
         ]
     }).addTo(map);
+
+    // --- Example with an rotated arrow heads ---
+    var arrowRotatedCoords = [[ 50.955, -8.240 ], [ 41.083, -17.869 ]];
+    var arrowRotatedLine = L.polyline(arrowRotatedCoords).addTo(map);
+    L.polylineDecorator(arrowRotatedLine, {
+        patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({angleCorrection: 90, pixelSize: 15, pathOptions: {color: 'red', fillOpacity: 1, weight: 0}})},
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({angleCorrection: 270, pixelSize: 15, pathOptions: {color: 'blue', fillOpacity: 1, weight: 0}})}
+        ]
+    }).addTo(map);
 }
