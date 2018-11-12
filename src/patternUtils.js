@@ -66,10 +66,10 @@ function projectPatternOnPointPath(pts, pattern) {
     // 2. generate the positions of the pattern as offsets from the path start
     const positionOffsets = [];
     let positionOffset = startOffsetPixels;
-    do {
+    while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels) {
         positionOffsets.push(positionOffset);
         positionOffset += repeatIntervalPixels;
-    } while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels);
+    }
 
     // 3. projects offsets to segments
     let segmentIndex = 0;
