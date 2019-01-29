@@ -3,7 +3,7 @@
 [![CDNJS](https://img.shields.io/cdnjs/v/leaflet-polylinedecorator.svg)](https://cdnjs.com/libraries/leaflet-polylinedecorator)
 
 A Leaflet plug-in to define and draw patterns on existing Polylines or along coordinate paths.
-[Demo](http://bbecquet.github.io/Leaflet.PolylineDecorator/example/example.html).
+[Demo](https://bbecquet.github.io/Leaflet.PolylineDecorator/example/example.html).
 
 ## Compatibility with Leaflet versions
 
