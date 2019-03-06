@@ -71,6 +71,10 @@ function projectPatternOnPointPath(pts, pattern) {
 
     var totalPathLength = segments[nbSegments - 1].distB;
 
+    if (totalPathLength < pattern.offset.value || totalPathLength < pattern.symbolFactory.options.pixelSize) {
+        return [];
+    }
+
     var offset = asRatioToPathLength(pattern.offset, totalPathLength);
     var endOffset = asRatioToPathLength(pattern.endOffset, totalPathLength);
     var repeat = asRatioToPathLength(pattern.repeat, totalPathLength);
@@ -181,6 +185,12 @@ function interpolateBetweenPoints(ptA, ptB, ratio) {
         }
     });
 })();
+
+// enable rotationAngle and rotationOrigin support on L.Marker
+/**
+* Defines several classes of symbol factories,
+* to be used with L.PolylineDecorator
+*/
 
 L$1.Symbol = L$1.Symbol || {};
 
