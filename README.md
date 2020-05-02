@@ -52,6 +52,7 @@ Property | Type | Required | Description
 `offset`| *see below* | No | Offset of the first pattern symbol, from the start point of the line. Default: 0.
 `endOffset`| *see below* | No | Minimum offset of the last pattern symbol, from the end point of the line. Default: 0.
 `repeat`| *see below* | Yes | Repetition interval of the pattern symbols. Defines the distance between each consecutive symbol's anchor point.
+`lineOffset` | number (pixels) | No | Offset line to the left (negative value) or the right (positive value). Default: 0.
 `symbol`| Symbol factory | Yes | Instance of a symbol factory class.
 
 `offset`, `endOffset` and `repeat` can be each defined as a number, in pixels, or in percentage of the line's length, as a string (ex: `'10%'`).

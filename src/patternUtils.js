@@ -62,6 +62,7 @@ function projectPatternOnPointPath(pts, pattern) {
     const repeatIntervalPixels = totalPathLength * repeat;
     const startOffsetPixels = offset > 0 ? totalPathLength * offset : 0;
     const endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
+    const lineOffset = pattern.lineOffset || 0;
 
     // 2. generate the positions of the pattern as offsets from the path start
     const positionOffsets = [];
@@ -84,7 +85,7 @@ function projectPatternOnPointPath(pts, pattern) {
 
         const segmentRatio = (positionOffset - segment.distA) / (segment.distB - segment.distA);
         return {
-            pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio),
+            pt: interpolateBetweenPoints(segment.a, segment.b, segmentRatio, lineOffset, segment.distB - segment.distA),
             heading: segment.heading,
         };
     });
@@ -94,17 +95,22 @@ function projectPatternOnPointPath(pts, pattern) {
 * Finds the point which lies on the segment defined by points A and B,
 * at the given ratio of the distance from A to B, by linear interpolation.
 */
-function interpolateBetweenPoints(ptA, ptB, ratio) {
+function interpolateBetweenPoints(ptA, ptB, ratio, lineOffset, length) {
+    let n = {x: 0, y: 0}
+    if (lineOffset !== 0) {
+      n = {x: - (ptB.y - ptA.y) / length, y: (ptB.x - ptA.x) / length}
+    }
+
     if (ptB.x !== ptA.x) {
         return {
-            x: ptA.x + ratio * (ptB.x - ptA.x),
-            y: ptA.y + ratio * (ptB.y - ptA.y),
+            x: ptA.x + ratio * (ptB.x - ptA.x) + n.x * lineOffset,
+            y: ptA.y + ratio * (ptB.y - ptA.y) + n.y * lineOffset
         };
     }
     // special case where points lie on the same vertical axis
     return {
-        x: ptA.x,
-        y: ptA.y + (ptB.y - ptA.y) * ratio,
+        x: ptA.x + n.x * lineOffset,
+        y: ptA.y + (ptB.y - ptA.y) * ratio + n.y * lineOffset,
     };
 }
 
