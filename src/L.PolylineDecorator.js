@@ -85,6 +85,7 @@ L.PolylineDecorator = L.FeatureGroup.extend({
             offset: parseRelativeOrAbsoluteValue(patternDef.offset),
             endOffset: parseRelativeOrAbsoluteValue(patternDef.endOffset),
             repeat: parseRelativeOrAbsoluteValue(patternDef.repeat),
+            lineOffset: patternDef.lineOffset
         };
     },
 
