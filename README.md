@@ -52,7 +52,7 @@ Property | Type | Required | Description
 `offset`| *see below* | No | Offset of the first pattern symbol, from the start point of the line. Default: 0.
 `endOffset`| *see below* | No | Minimum offset of the last pattern symbol, from the end point of the line. Default: 0.
 `repeat`| *see below* | Yes | Repetition interval of the pattern symbols. Defines the distance between each consecutive symbol's anchor point.
-`symbol`| Symbol factory | Yes | Instance of a symbol factory class.
+`symbol`| Symbol factory | Yes | Instance of a symbol factory class. (see below)
 
 `offset`, `endOffset` and `repeat` can be each defined as a number, in pixels, or in percentage of the line's length, as a string (ex: `'10%'`).
 
@@ -62,6 +62,36 @@ Method | Description
 --- | ---
 `setPaths(latlngs)` | Changes the path(s) the decorator applies to. `latlngs` can be all the types supported by the constructor. Useful for example if you remove polyline from a set, or coordinates change.
 `setPatterns(<Pattern[]> patterns)` | Changes the decorator's pattern definitions, and update the symbols accordingly.
+
+## Symbol factories
+Leaflet.PolylineDecorator comes with these symbol factories:
+
+### L.Symbol.dash
+This factory creates dashes similar to dash-array.
+
+Property | Type | Description
+--- | --- | ---
+`pixelSize` | number | Length of each dash in pixels. If length is `0`, dots will be generated. Default: 10.
+`pathOptions` | object | Options of the Polyline which will be generated for each dash.
+
+### L.Symbol.arrowHead
+This factory creates arrow heads.
+
+Property | Type | Description
+--- | --- | ---
+`polygon` | boolean | Whether the arrow heads shall be closed at the bottom. Default: true.
+`pixelSize` | number | Size of the arrow head in pixels. Default: 10.
+`headAngle` | number | Angle of the arrow edges. Default: 60.
+`pathOptions` | object | Options of the L.Polyline which will be generated for each dash.
+
+### L.Symbol.marker
+The factory creates markers.
+
+Property | Type | Description
+--- | --- | ---
+`rotate` | boolean | Should the marker be rotated along the line it followes. Default: false.
+`angleCorrection` | number | Additional rotation angle when rotate is true. Default: 0.
+`markerOptions` | object | Options of the L.marker which will be generated for each dash.
 
 ## Example
 
