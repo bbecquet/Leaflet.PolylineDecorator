@@ -66,7 +66,7 @@ function projectPatternOnPointPath(pts, pattern) {
       const endOffsetPixels = endOffset > 0 ? totalPathLength * endOffset : 0;
       let positionOffset = offset > 0 ? totalPathLength * offset : 0;
 
-      while(repeatIntervalPixels > 0 && positionOffset < totalPathLength - endOffsetPixels) {
+      while(repeatIntervalPixels > 0 && positionOffset <= totalPathLength - endOffsetPixels) {
           positionOffsets.push(positionOffset);
           positionOffset += repeatIntervalPixels;
       }
